@@ -1,0 +1,3 @@
+Host gnt-test??
+	UserKnownHostsFile /dev/null
+	StrictHostKeyChecking no

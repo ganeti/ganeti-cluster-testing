@@ -1,0 +1,68 @@
+---
+
+- name: Install required packages
+  apt:
+    name: 
+      - vlan
+      - bridge-utils
+      - drbd-utils
+      - qemu-kvm
+      - ganeti
+      - ganeti-instance-debootstrap
+      - ganeti-os-noop
+
+- name: Configure DRBD module options
+  copy:
+    dest: /etc/modprobe.d/drbd.conf
+    content: "options drbd minor_count=128 usermode_helper=/bin/true"
+    owner: root
+    group: root
+    mode: "0644"
+ 
+- name: Load DRBD module
+  modprobe:
+    name: drbd
+    state: present
+
+- name: Make sure cluster node names are present in /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+  with_items:
+    - "192.168.122.11   gnt-test01"
+    - "192.168.122.12   gnt-test02"
+    - "192.168.122.13   gnt-test03"
+
+- name: Make sure cluster name is present in /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "192.168.199.1   staging-cluster.ganeti.org"
+
+- name: Create /root/.ssh directory
+  file:
+    path: /root/.ssh
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install SSH private key for cluster authentication
+  copy:
+    src: ssh_private_key
+    dest: /root/.ssh/id_ed25519
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Install SSH public key for cluster authentication
+  lineinfile:
+    path: /root/.ssh/authorized_keys
+    line: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH6OrYNU4hxmcRY7N/a5+GI64BO1jYXdtoUn0E4V/4XE ganeti-staging-tests"
+
+- name: Install SSH client config for cluster communication
+  copy:
+    src: ssh_config
+    dest: /root/.ssh/config
+    owner: root
+    group: root
+    mode: "0640"

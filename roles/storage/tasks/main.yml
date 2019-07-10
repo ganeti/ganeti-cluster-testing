@@ -1,0 +1,14 @@
+---
+
+- name: Install lvm packages
+  apt:
+    name: lvm2
+    state: present
+
+- name: Create physical volume / volume group for ganeti
+  lvg:
+    pvs: /dev/vda3
+    vg: gnt
+    state: present
+
+

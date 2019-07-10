@@ -1,0 +1,17 @@
+---
+
+- hosts: ganeti_nodes
+  user: root
+  roles:
+    - storage
+    - ganeti
+
+- hosts: 192.168.122.11
+  user: root
+  tasks:
+    - name: Initialise cluster
+      command: gnt-cluster init --vg-name gnt --master-netdev eth0 --master-netmask 24 --enabled-hypervisors kvm --nic-parameters mode=bridged,link=virt-bridge --default-iallocator hail --hypervisor-parameters kvm:spice_bind=0.0.0.0,spice_use_tls=true,kernel_path= staging-cluster.ganeti.org
+    - name: Add node
+      command: gnt-node add --no-ssh-key-check gnt-test02
+    - name: Add node
+      command: gnt-node add --no-ssh-key-check gnt-test03
