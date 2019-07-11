@@ -2,6 +2,13 @@
 
 - hosts: ganeti_nodes
   user: root
+  gather_facts: False
+  tasks:
+    - name: Wait for SSH
+      local_action: "wait_for port=22 host={{ inventory_hostname }}"
+
+- hosts: ganeti_nodes
+  user: root
   roles:
     - storage
     - ganeti
