@@ -11,6 +11,15 @@
       - ganeti-instance-debootstrap
       - ganeti-os-noop
 
+- name: Configure network bridge
+  copy:
+    src: virt-bridge.conf
+    dest: /etc/network/interfaces.d/virt-bridge.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Start network bridge
+
 - name: Configure DRBD module options
   copy:
     dest: /etc/modprobe.d/drbd.conf
