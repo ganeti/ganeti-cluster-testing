@@ -1,8 +1,8 @@
 <domain type='kvm'>
   <name>__VM_NAME__</name>
-  <memory unit='KiB'>1048576</memory>
-  <currentMemory unit='KiB'>1048576</currentMemory>
-  <vcpu placement='static'>2</vcpu>
+  <memory unit='KiB'>8048576</memory>
+  <currentMemory unit='KiB'>8048576</currentMemory>
+  <vcpu placement='static'>4</vcpu>
   <resource>
     <partition>/machine</partition>
   </resource>
