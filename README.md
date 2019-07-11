@@ -3,12 +3,6 @@
 These scripts and Ansible playbooks/roles allow you to setup a N-node Ganeti cluster for testing purposes. It uses libvirt/KVM as a virtualisiation layer, qemu-utils, debootstrap and apt-cacher-ng to setup VMs and Ansible to provision different kinds of Ganeti clusters. As of now it supports creating these cluster types:
 - DRBD disks, bridged networking, fully virtualised KVM instances (e.g. running their own kernel)
 
-Todo-Cluster-Types:
-- DRBD disks with different variants of networking and/or different OS providers
-- flatfile / shared file clusters
-- other hypervisors (as long as they are usable within KVM)
-- you name it
-
 ## How to use
 
 - install/configure all required dependencies:
@@ -31,3 +25,24 @@ If you want to provide a new flavor of Ganeti cluster (e.g. with shared storage,
 ## How fast is this?
 
 It takes about 15 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). Things should look better on more recent hardware, especially with flash disks in place.
+
+## TODOs
+
+### Improvements
+- better logging in shell scripts
+- better error handling in shell scripts (traps etc.)
+- better error recovery (detect/cleanup a previous failed run)
+- add locking (and stale lock detection)
+- speed up the creation of N similar VMs (e.g. run debootstrap only once & duplicate images)
+- use a single shell script with parameters as an entry point (instead of one shell script & one playbook per cluster type) to avoid lots of duplicated code
+
+### Missing / New Features
+- build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
+- find a way to capture/save/provide the output/results of the build/test process
+- find a way to provision test instances in the currently existing DRBD cluster scenario for actual tests
+
+### Playbooks for other cluster types:
+- DRBD disks with different variants of networking and/or different OS providers
+- flatfile / shared file clusters
+- other hypervisors (as long as they are usable within KVM)
+- you name it
