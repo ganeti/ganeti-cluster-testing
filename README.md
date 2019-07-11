@@ -35,6 +35,7 @@ It takes about 15 minutes to create the required VMs and setup a three-node Gane
 - add locking (and stale lock detection)
 - speed up the creation of N similar VMs (e.g. run debootstrap only once & duplicate images)
 - use a single shell script with parameters as an entry point (instead of one shell script & one playbook per cluster type) to avoid lots of duplicated code
+- check if it's possible to run as non-root user
 
 ### Missing / New Features
 - build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
