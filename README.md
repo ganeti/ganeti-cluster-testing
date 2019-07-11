@@ -16,11 +16,11 @@ These scripts and Ansible playbooks/roles allow you to setup a N-node Ganeti clu
   - qemu-utils
   - apt-cacher-ng
   - ansible
-- run the bash script to kick of the build process: `setup-$yourGanetiFlavor.sh` This will create the required VMs, boot them and also kick of the required Ansible playbook (which should have a similar name) to do the final setup and initialise the Ganeti cluster, add nodes etc.
+- run the bash script to kick of the build process: `run-cluster-test.sh -c [your-cluster-scenario]` This will create the required VMs, boot them and also kick of the Ansible playbook (named your-cluster-scenario.yml) to do the final setup and initialise the Ganeti cluster, add nodes etc.
 
 ## How to extend
 
-If you want to provide a new flavor of Ganeti cluster (e.g. with shared storage, chroot supervisor etc.) create a new `setup-$yourGanetiFlavor.sh` script which creates the required amount of VMs and also fires the Ansible playbook which does the actual cluster initialisation. Take a look at the existing scripts/playbooks to see examples and also remember to reuse/extend existing Ansible roles rather than re-implementing the same logic for different cluster types again.
+If you want to create a new flavor of ganeti cluster setup (e.g. using a central shared storage or glusterfs) write a playbook, name it accordingly and extend the `run-cluster-test.sh` to support your new playbook (e.g. extend the usage() function, set the number of required VMs etc.). The current logic allows to create up to nine VMs (named gnt-test01...gnt-test09 with ip addresses 192.168.122.11..19). DNS resolution (via `/etc/hosts`) for inter-vm communication will be set up and an SSH public key will be added to allow for easy access from the management host.
 
 ## How fast is this?
 
@@ -34,7 +34,7 @@ It takes about 15 minutes to create the required VMs and setup a three-node Gane
 - better error recovery (detect/cleanup a previous failed run)
 - add locking (and stale lock detection)
 - speed up the creation of N similar VMs (e.g. run debootstrap only once & duplicate images)
-- use a single shell script with parameters as an entry point (instead of one shell script & one playbook per cluster type) to avoid lots of duplicated code
+- [*done*] use a single shell script with parameters as an entry point (instead of one shell script & one playbook per cluster type) to avoid lots of duplicated code
 - check if it's possible to run as non-root user
 
 ### Missing / New Features
