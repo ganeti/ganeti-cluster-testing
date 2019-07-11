@@ -12,9 +12,9 @@
       - ganeti-os-noop
 
 - name: Configure network bridge
-  copy:
-    src: virt-bridge.conf
-    dest: /etc/network/interfaces.d/virt-bridge.conf
+  template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
     owner: root
     group: root
     mode: "0644"
