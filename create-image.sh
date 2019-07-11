@@ -156,6 +156,8 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
+
+source /etc/network/interfaces.d/*.conf
 EOF
 else
 	cat <<EOF > ${DEBOOTSTRAP_PATH}/etc/network/interfaces
@@ -167,6 +169,8 @@ iface eth0 inet static
 	address ${NET_IP}
 	netmask ${NET_MASK}
 	gateway ${NET_GW}
+
+source /etc/network/interfaces.d/*.conf
 EOF
 fi
 
