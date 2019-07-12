@@ -24,7 +24,7 @@ If you want to create a new flavor of ganeti cluster setup (e.g. using a central
 
 ## How fast is this?
 
-It takes about 15 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). Things should look better on more recent hardware, especially with flash disks in place.
+It takes about 10 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). Things should look better on more recent hardware, especially with flash disks in place.
 
 ## TODOs
 
