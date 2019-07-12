@@ -11,15 +11,6 @@
       - ganeti-instance-debootstrap
       - ganeti-os-noop
 
-- name: Configure network bridge
-  template:
-    src: interfaces.j2
-    dest: /etc/network/interfaces
-    owner: root
-    group: root
-    mode: "0644"
-  notify: Start network bridge
-
 - name: Configure DRBD module options
   copy:
     dest: /etc/modprobe.d/drbd.conf
