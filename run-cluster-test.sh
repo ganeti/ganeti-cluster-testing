@@ -128,10 +128,18 @@ else
 	exit 1
 fi
 
+SCRIPT_START=`date +%s`
+
 killVms
 createVms 3
 bootVms 3
 runPlaybook $CLUSTERTYPE
+
+SCRIPT_END=`date +%s`
+SCRIPT_RUNTIME=$((SCRIPT_END - SCRIPT_START))
+SCRIPT_RUNTIME_M=$((SCRIPT_RUNTIME / 60))
+
+echo "* Script execution time: ${SCRIPT_RUNTIME}s (~${SCRIPT_RUNTIME_M}m)"
 
 cleanupLock
 
