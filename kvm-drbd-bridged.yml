@@ -11,6 +11,7 @@
   user: root
   roles:
     - storage
+    - bridge_networking
     - ganeti
 
 - hosts: 192.168.122.11
