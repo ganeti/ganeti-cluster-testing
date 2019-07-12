@@ -16,10 +16,17 @@ usage() {
 	exit 1
 }
 
+
+
 killVms() {
+	echo "* Destroying all running VMs (if any)..."
+	echo
 	for dom in $(virsh --quiet list --all|grep running | awk '{ print $2 }'); do
 		virsh destroy "${dom}"
 	done
+	echo
+	echo "* Finished destroying VMs"
+	echo
 }
 
 createVms() {
