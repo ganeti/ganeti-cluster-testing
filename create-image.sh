@@ -2,8 +2,7 @@
 
 NET_NAME=auto-vm
 DEBIANVERSION=stable
-DEBOOTSTRAP_PATH=$(mktemp -d)
-LOGFILE=$(mktemp)
+DEBOOTSTRAP_PATH=$(mktemp -d debootstrap.XXXXX)
 QCOW_IMG_PATH=""
 QCOW_IMG_SIZE=2G
 FORCE_OVERWRITE=false
@@ -106,8 +105,9 @@ if ! modprobe nbd; then
 	exit 1
 fi
 
-rm -f ${QCOW_IMG_PATH}
+rm -f "${QCOW_IMG_PATH}""
 
+LOGFILE=$(mktemp ${NET_NAME}.XXXXX)
 echo "Logging the process to ${LOGFILE}"
 
 # create and mount the image
