@@ -105,7 +105,7 @@ if ! modprobe nbd; then
 	exit 1
 fi
 
-rm -f "${QCOW_IMG_PATH}""
+rm -f "${QCOW_IMG_PATH}"
 
 LOGFILE=$(mktemp ${NET_NAME}.XXXXX)
 echo "Logging the process to ${LOGFILE}"
