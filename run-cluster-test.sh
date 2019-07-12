@@ -1,6 +1,5 @@
 #!/bin/bash
 
-TMPFILE=$(mktemp)
 PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
 
@@ -79,12 +78,14 @@ createVms() {
 
 bootVms() {
 	numVMs=$1
+	TMPFILE=$(mktemp)
 	echo "* Creating / booting VMs"
 	echo
 	for i in `seq 1 ${numVMs}`; do
 		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template.xml > $TMPFILE
 		virsh create ${TMPFILE}
 	done
+	rm $TMPFILE
 	echo "* Finished creating / booting VMs"
 	echo
 }
