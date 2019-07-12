@@ -36,7 +36,7 @@
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:
     path: /etc/hosts
-    line: "192.168.199.1   staging-cluster.ganeti.org"
+    line: "192.168.122.254   staging-cluster.ganeti.org"
 
 - name: Create /root/.ssh directory
   file:
