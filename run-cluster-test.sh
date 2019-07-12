@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TMPFILE=$(mktemp)
+PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
 
 usage() {
@@ -16,7 +17,42 @@ usage() {
 	exit 1
 }
 
+checkLock() {
+	if ! [ -f ${PIDFILE} ]; then
+		return 0
+	else
+		FOUNDPID=$(cat ${PIDFILE}|grep -oE "[0-9]+")
+		if [ -z "${FOUNDPID}" ]; then
+			echo "* Found lockfile with invalid content, removed"
+			rm ${PIDFILE}
+			return 0
+		else
+			if [ -d "/proc/${FOUNDPID}" ]; then
+				echo "* This script is already running as PID ${FOUNDPID}"
+				return 1
+			else
+				rm ${PIDFILE}
+				echo "* Found stale lock file, removed"
+				return 0
+			fi
+		fi
+	fi
+}
 
+acquireLock() {
+	if echo $$ > ${PIDFILE}; then
+		echo "* Successfully acquired lock"
+		return 0
+	else
+		echo "* Failed to acquire lock"
+		return 1
+	fi
+}
+
+cleanupLock() {
+	rm ${PIDFILE}
+	echo "* Released lock"
+}
 
 killVms() {
 	echo "* Destroying all running VMs (if any)..."
@@ -86,9 +122,17 @@ case $CLUSTERTYPE in
 		;;
 esac
 
+if checkLock; then
+	if ! acquireLock; then exit 1; fi
+else
+	exit 1
+fi
+
 killVms
 createVms 3
 bootVms 3
 runPlaybook $CLUSTERTYPE
+
+cleanupLock
 
 

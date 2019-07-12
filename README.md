@@ -32,7 +32,7 @@ It takes about 15 minutes to create the required VMs and setup a three-node Gane
 - better logging in shell scripts
 - better error handling in shell scripts (traps etc.)
 - better error recovery (detect/cleanup a previous failed run)
-- add locking (and stale lock detection)
+- [*done*] add locking (and stale lock detection)
 - speed up the creation of N similar VMs (e.g. run debootstrap only once & duplicate images)
 - [*done*] use a single shell script with parameters as an entry point (instead of one shell script & one playbook per cluster type) to avoid lots of duplicated code
 - check if it's possible to run as non-root user
