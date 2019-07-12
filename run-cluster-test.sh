@@ -16,33 +16,6 @@ usage() {
 	exit 1
 }
 
-while getopts "hc:" opt; do
-	case $opt in
-		h)
-			usage
-			exit 0
-			;;
-		c)
-			CLUSTERTYPE=$OPTARG
-			;;
-	esac
-done
-
-if [ -z "$CLUSTERTYPE" ]; then
-	echo "Please specify cluster type to build/test"
-	exit 1
-fi
-
-case $CLUSTERTYPE in
-	kvm-drbd-bridged)
-		NUMBER_OF_VMS=3
-		;;
-	*)
-		echo "Unknown/unsupported cluster type '${CLUSTERTYPE}'"
-		exit 1
-		;;
-esac
-
 killVms() {
 	for dom in $(virsh --quiet list --all|grep running | awk '{ print $2 }'); do
 		virsh destroy "${dom}"
@@ -78,6 +51,33 @@ runPlaybook() {
 	echo "* Prepare VMs/initialise ganeti cluster"
 	ansible-playbook -i inventory ${play}.yml
 }
+
+while getopts "hc:" opt; do
+	case $opt in
+		h)
+			usage
+			exit 0
+			;;
+		c)
+			CLUSTERTYPE=$OPTARG
+			;;
+	esac
+done
+
+if [ -z "$CLUSTERTYPE" ]; then
+	echo "Please specify cluster type to build/test"
+	exit 1
+fi
+
+case $CLUSTERTYPE in
+	kvm-drbd-bridged)
+		NUMBER_OF_VMS=3
+		;;
+	*)
+		echo "Unknown/unsupported cluster type '${CLUSTERTYPE}'"
+		exit 1
+		;;
+esac
 
 killVms
 createVms 3
