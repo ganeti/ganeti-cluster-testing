@@ -10,6 +10,7 @@
       - ganeti
       - ganeti-instance-debootstrap
       - ganeti-os-noop
+      - ganeti-testsuite
 
 - name: Configure DRBD module options
   copy:
