@@ -67,3 +67,11 @@
     owner: root
     group: root
     mode: "0640"
+
+- name: "QUICKFIX: install qa/colors.py manually as it is missing in ganeti-testsuite"
+  copy:
+    src: colors.py
+    dest: /usr/share/ganeti/testsuite/qa/colors.py
+    owner: root
+    group: root
+    mode: "0644"
