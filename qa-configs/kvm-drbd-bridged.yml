@@ -1,0 +1,180 @@
+{
+  "# Note:": null,
+  "# This file is stored in the JSON format and does not support": null,
+  "# comments. As a work-around, comments are keys starting with a hash": null,
+  "# sign (#).": null,
+
+  "name": "kvm-drbd-bridged",
+
+  "os": "noop",
+  "maxmem": "1024M",
+  "minmem": "512M",
+
+  "# Lists of disks": null,
+  "disks": [
+    {
+      "size": "1G",
+      "spindles": 2,
+      "name": "disk0",
+      "growth": "2G",
+      "spindles-growth": 1
+    },
+    {
+      "size": "512M",
+      "spindles": 1,
+      "name": "disk1",
+      "growth": "768M",
+      "spindles-growth": 0
+    }
+  ],
+
+  "modify_ssh_setup": true,
+
+  "instances": [
+    {
+      "name": "kvm-test-instance01",
+    },
+    {
+      "name": "kvm-test-instance02",
+    }
+  ],
+
+  "groups": {
+    "group-with-nodes": "default",
+    "inexistent-groups": [
+      "group1",
+      "group2",
+      "group3"
+    ]
+  },
+
+  "networks": {
+    "inexistent-networks": [
+      "network1",
+      "network2",
+      "network3"
+    ]
+  },
+
+  "tests": {
+    "# Whether tests are enabled or disabled by default": null,
+    "default": false,
+
+    "env": true,
+    "os": true,
+    "tags": true,
+    "rapi": true,
+    "performance": true,
+    "test-jobqueue": true,
+    "delay": true,
+
+    "create-cluster": false,
+    "cluster-verify": true,
+    "cluster-info": true,
+    "cluster-burnin": false,
+    "cluster-command": true,
+    "cluster-copyfile": true,
+    "cluster-master-failover": false,
+    "cluster-renew-crypto": true,
+    "cluster-destroy": false,
+    "cluster-rename": true,
+    "cluster-reserved-lvs": true,
+    "cluster-modify": true,
+    "cluster-oob": true,
+    "cluster-instance-communication": true,
+    "cluster-epo": true,
+    "cluster-redist-conf": true,
+    "cluster-repair-disk-sizes": true,
+    "cluster-exclusive-storage": true,
+    "cluster-instance-policy": true,
+    "cluster-upgrade": false,
+
+    "haskell-confd": true,
+    "htools": true,
+
+    "group-list": true,
+    "group-rwops": true,
+    "group-custom-ssh-port": true,
+
+    "network": false,
+
+    "node-list": true,
+    "node-info": true,
+    "node-volumes": true,
+    "node-readd": true,
+    "node-storage": true,
+    "node-modify": true,
+    "node-oob": true,
+
+    "# These tests need at least three nodes": null,
+    "node-evacuate": true,
+    "node-migrate": true,
+
+    "# This test needs at least two nodes": null,
+    "node-failover": true,
+
+    "instance-add-plain-disk": true,
+    "instance-add-file": false,
+    "instance-add-shared-file": false,
+    "instance-add-drbd-disk": true,
+    "instance-add-diskless": true,
+    "instance-add-rbd": false,
+    "instance-add-gluster": false,
+    "instance-add-restricted-by-disktemplates": true,
+    "instance-convert-disk": false,
+    "instance-plain-rapi-common-tests": true,
+    "instance-remove-drbd-offline": true,
+
+    "instance-export": true,
+    "instance-failover": true,
+    "instance-grow-disk": true,
+    "instance-import": true,
+    "instance-info": true,
+    "instance-list": true,
+    "instance-migrate": true,
+    "instance-modify": true,
+    "instance-modify-primary": true,
+    "instance-modify-disks": false,
+    "instance-reboot": true,
+    "instance-reinstall": true,
+    "instance-rename": true,
+    "instance-shutdown": true,
+    "instance-device-names": true,
+    "instance-device-hotplug": false,
+    "instance-user-down": true,
+    "instance-communication": true,
+
+    "job-list": true,
+
+    "jobqueue-performance": true,
+    "parallel-performance": true,
+
+    "# cron/ganeti-watcher should be disabled for these tests": null,
+    "instance-automatic-restart": false,
+    "instance-consecutive-failures": false,
+
+    "# This test might fail with certain hypervisor types, depending": null,
+    "# on whether they support the `gnt-instance console' command.": null,
+    "instance-console": false,
+
+    "# Disabled by default because they take rather long": null,
+    "instance-replace-disks": false,
+    "instance-recreate-disks": false,
+
+    "# Whether to test the tools/move-instance utility": null,
+    "inter-cluster-instance-move": false,
+
+    "# Run instance tests with different cluster configurations": null,
+    "default-instance-tests": true,
+    "exclusive-storage-instance-tests": false,
+
+    "mon-collector": true
+  },
+
+  "options": {
+    "reboot-types": ["soft", "hard", "full"],
+    "use-iallocators": true
+  },
+
+  "# vim: set syntax=javascript :": null
+}
