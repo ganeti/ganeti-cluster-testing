@@ -28,14 +28,29 @@
     }
   ],
 
-  "modify_ssh_setup": true,
+  "nodes": [
+    {
+      "primary": "gnt-test01",
+      "secondary": "192.168.122.11"
+    },
+    {
+      "primary": "gnt-test02",
+      "secondary": "192.168.122.12"
+    },
+    {
+      "primary": "gnt-test03",
+      "secondary": "192.168.122.13"
+    }
+  ],
+
+  "modify_ssh_setup": false,
 
   "instances": [
     {
-      "name": "kvm-test-instance01",
+      "name": "kvm-test-instance01"
     },
     {
-      "name": "kvm-test-instance02",
+      "name": "kvm-test-instance02"
     }
   ],
 
@@ -63,7 +78,7 @@
     "env": true,
     "os": true,
     "tags": true,
-    "rapi": true,
+    "rapi": false,
     "performance": true,
     "test-jobqueue": true,
     "delay": true,
@@ -75,9 +90,9 @@
     "cluster-command": true,
     "cluster-copyfile": true,
     "cluster-master-failover": false,
-    "cluster-renew-crypto": true,
+    "cluster-renew-crypto": false,
     "cluster-destroy": false,
-    "cluster-rename": true,
+    "cluster-rename": false,
     "cluster-reserved-lvs": true,
     "cluster-modify": true,
     "cluster-oob": true,
@@ -122,7 +137,7 @@
     "instance-add-gluster": false,
     "instance-add-restricted-by-disktemplates": true,
     "instance-convert-disk": false,
-    "instance-plain-rapi-common-tests": true,
+    "instance-plain-rapi-common-tests": false,
     "instance-remove-drbd-offline": true,
 
     "instance-export": true,
