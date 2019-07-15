@@ -80,3 +80,7 @@
     owner: root
     group: root
     mode: "0644"
+
+- name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
+  command: "sed -i -e 's/strict=True/strict=False/' /usr/share/ganeti/testsuite/qa/qa_utils.py"
+
