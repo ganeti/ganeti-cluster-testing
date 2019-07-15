@@ -6,6 +6,10 @@
 
   "name": "kvm-drbd-bridged",
 
+  "primary_ip_version": 4,
+
+  "vg-name": "gnt",
+
   "os": "noop",
   "maxmem": "1024M",
   "minmem": "512M",
