@@ -98,8 +98,12 @@ runPlaybook() {
 
 runQaScript() {
     recipe=$1
-    scp qa-scripts/${recipe}.yml gnt-test01:/tmp/
-    ssh gnt-test01 "export PYTHONPATH="/usr/share/ganeti/default"; cd /usr/share/ganeti/testsuite/qa; ./ganeti --yes-do-it /tmp/${recipe}.yml"
+    tmpkey=$(mktemp)
+    cp roles/ganeti/files/ssh_private_key "${tmpkey}"
+    chmod 600 "${tmpkey}"
+    scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" qa-configs/${recipe}.yml 192.168.122.11:/tmp/
+    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.yml"
+    rm "${tmpkey}"
 }
 
 while getopts "hc:" opt; do
