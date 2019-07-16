@@ -51,3 +51,4 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 ### Failing QA tests
 Following is a list of tests from the ganeti QA testsuite which currently fail (possibly due to a broken test)
 - cluster-modify: 'user-shutdown' test fails
+- os: operation system definition tests fail on kvm-enabled hosts because it seems to assume xen and sets an invalid/non-existant kernel_path variable

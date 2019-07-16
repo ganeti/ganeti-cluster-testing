@@ -80,7 +80,8 @@
     "default": false,
 
     "env": true,
-    "os": true,
+    "# operating system tests seem to be xen-centric and fail on a kvm-enabled system (e.g. due to invalid kernel_path variable content)": null,
+    "os": false,
     "tags": true,
     "rapi": false,
     "performance": true,
