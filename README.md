@@ -47,3 +47,7 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 - flatfile / shared file clusters
 - other hypervisors (as long as they are usable within KVM)
 - you name it
+
+### Failing QA tests
+Following is a list of tests from the ganeti QA testsuite which currently fail (possibly due to a broken test)
+- cluster-modify: 'user-shutdown' test fails
