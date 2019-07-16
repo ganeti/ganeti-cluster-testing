@@ -125,7 +125,8 @@
     "node-readd": true,
     "node-storage": true,
     "node-modify": true,
-    "node-oob": true,
+    "# this requires a usable ouf-of-band management configuration. maybe this could be do-able with libvirt on the node running tests?": null,
+    "node-oob": false,
 
     "# These tests need at least three nodes": null,
     "node-evacuate": true,
