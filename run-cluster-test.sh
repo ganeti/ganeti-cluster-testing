@@ -96,6 +96,12 @@ runPlaybook() {
 	ansible-playbook -i inventory ${play}.yml
 }
 
+runQaScript() {
+    recipe=$1
+    scp qa-scripts/${recipe}.yml gnt-test01:/tmp/
+    ssh gnt-test01 "export PYTHONPATH="/usr/share/ganeti/default"; cd /usr/share/ganeti/testsuite/qa; ./ganeti --yes-do-it /tmp/${recipe}.yml"
+}
+
 while getopts "hc:" opt; do
 	case $opt in
 		h)
@@ -129,18 +135,25 @@ else
 	exit 1
 fi
 
-SCRIPT_START=`date +%s`
 
 killVms
+SCRIPT_START_VMS=`date +%s`
 createVms 3
 bootVms 3
 runPlaybook $CLUSTERTYPE
+SCRIPT_FINISH_VMS=`date +%s`
+SCRIPT_START_QA=`date +%s`
+runQaScript $CLUSTERTYPE
+SCRIPT_FINISH_QA=`date +%s`
 
-SCRIPT_END=`date +%s`
-SCRIPT_RUNTIME=$((SCRIPT_END - SCRIPT_START))
-SCRIPT_RUNTIME_M=$((SCRIPT_RUNTIME / 60))
+SCRIPT_VMS_RUNTIME=$((SCRIPT_FINISH_VMS - SCRIPT_START_VMS))
+SCRIPT_VMS_RUNTIME_M=$((SCRIPT_VMS_RUNTIME / 60))
 
-echo "* Script execution time: ${SCRIPT_RUNTIME}s (~${SCRIPT_RUNTIME_M}m)"
+SCRIPT_QA_RUNTIME=$((SCRIPT_FINISH_QA - SCRIPT_START_QA))
+SCRIPT_QA_RUNTIME_M=$((SCRIPT_QA_RUNTIME / 60))
+
+echo "* Script execution time (VM building): ${SCRIPT_VM_RUNTIME}s (~${SCRIPT_VM_RUNTIME_M}m)"
+echo "* Script execution time (QA scripts): ${SCRIPT_QA_RUNTIME}s (~${SCRIPT_QA_RUNTIME_M}m)"
 
 cleanupLock
 
