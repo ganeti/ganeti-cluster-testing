@@ -15,22 +15,8 @@
     <apic/>
     <vmport state='off'/>
   </features>
-  <cpu mode='custom' match='exact' check='full'>
-    <model fallback='forbid'>Westmere-IBRS</model>
-    <vendor>Intel</vendor>
-    <feature policy='require' name='vme'/>
-    <feature policy='require' name='ss'/>
-    <feature policy='require' name='pclmuldq'/>
-    <feature policy='require' name='pcid'/>
-    <feature policy='require' name='x2apic'/>
-    <feature policy='require' name='tsc-deadline'/>
-    <feature policy='require' name='hypervisor'/>
-    <feature policy='require' name='arat'/>
-    <feature policy='require' name='tsc_adjust'/>
-    <feature policy='require' name='umip'/>
-    <feature policy='require' name='ssbd'/>
-    <feature policy='require' name='pdpe1gb'/>
-    <feature policy='require' name='rdtscp'/>
+  <cpu mode='host-passthrough'>
+    <cache mode='passthrough'/>
   </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>
