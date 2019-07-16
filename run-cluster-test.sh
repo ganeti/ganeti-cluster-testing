@@ -156,7 +156,7 @@ SCRIPT_VMS_RUNTIME_M=$((SCRIPT_VMS_RUNTIME / 60))
 SCRIPT_QA_RUNTIME=$((SCRIPT_FINISH_QA - SCRIPT_START_QA))
 SCRIPT_QA_RUNTIME_M=$((SCRIPT_QA_RUNTIME / 60))
 
-echo "* Script execution time (VM building): ${SCRIPT_VM_RUNTIME}s (~${SCRIPT_VM_RUNTIME_M}m)"
+echo "* Script execution time (VM building): ${SCRIPT_VMS_RUNTIME}s (~${SCRIPT_VMS_RUNTIME_M}m)"
 echo "* Script execution time (QA scripts): ${SCRIPT_QA_RUNTIME}s (~${SCRIPT_QA_RUNTIME_M}m)"
 
 cleanupLock
