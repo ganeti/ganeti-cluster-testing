@@ -17,14 +17,14 @@
   "# Lists of disks": null,
   "disks": [
     {
-      "size": "1G",
+      "size": "2G",
       "spindles": 2,
       "name": "disk0",
       "growth": "2G",
       "spindles-growth": 1
     },
     {
-      "size": "512M",
+      "size": "1G",
       "spindles": 1,
       "name": "disk1",
       "growth": "768M",
