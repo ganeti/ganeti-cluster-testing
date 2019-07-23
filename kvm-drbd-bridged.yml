@@ -18,7 +18,7 @@
   user: root
   tasks:
     - name: Initialise cluster
-      command: gnt-cluster init --vg-name gnt --master-netdev eth0 --master-netmask 24 --enabled-hypervisors kvm --nic-parameters mode=bridged,link=virt-bridge --default-iallocator hail --hypervisor-parameters kvm:spice_bind=0.0.0.0,spice_use_tls=true,kernel_path= staging-cluster.ganeti.org
+      command: gnt-cluster init --vg-name gnt --master-netdev eth0 --master-netmask 24 --enabled-hypervisors kvm --nic-parameters mode=bridged,link=virt-bridge --default-iallocator hail --hypervisor-parameters kvm:spice_bind=0.0.0.0,spice_use_tls=true,kernel_path= --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB staging-cluster.ganeti.org
     - name: Add node
       command: gnt-node add --no-ssh-key-check gnt-test02
     - name: Add node
