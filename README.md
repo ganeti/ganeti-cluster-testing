@@ -38,9 +38,9 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 - check if it's possible to run as non-root user
 
 ### Missing / New Features
-- build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
+- [*done*] build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
 - find a way to capture/save/provide the output/results of the build/test process
-- find a way to provision test instances in the currently existing DRBD cluster scenario for actual tests
+- find a way to provision operating systems on instances in the currently existing DRBD cluster scenario for actual tests
 
 ### Playbooks for other cluster types:
 - DRBD disks with different variants of networking and/or different OS providers
