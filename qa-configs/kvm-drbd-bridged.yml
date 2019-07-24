@@ -18,7 +18,7 @@
   "disks": [
     {
       "size": "2G",
-      "spindles": 2,
+      "spindles": 1,
       "name": "disk0",
       "growth": "2G",
       "spindles-growth": 1
@@ -115,7 +115,8 @@
 
     "group-list": true,
     "group-rwops": true,
-    "group-custom-ssh-port": true,
+    "# iptables stuff for SSH port redirects (to fake a non-standard SSH port) seem to fail at some point. not sure yet why.": null,
+    "group-custom-ssh-port": false,
 
     "network": false,
 
@@ -135,8 +136,8 @@
     "# This test needs at least two nodes": null,
     "node-failover": true,
 
-    "instance-add-plain-disk": true,
-    "instance-add-file": false,
+    "instance-add-plain-disk": false,
+    "instance-add-file": true,
     "instance-add-shared-file": false,
     "instance-add-drbd-disk": true,
     "instance-add-diskless": true,
@@ -147,7 +148,8 @@
     "instance-plain-rapi-common-tests": false,
     "instance-remove-drbd-offline": true,
 
-    "instance-export": true,
+    "# we need more space on the root fs of our ganeti test VMs for this test to pass": null,
+    "instance-export": false,
     "instance-failover": true,
     "instance-grow-disk": true,
     "instance-import": true,
@@ -158,13 +160,15 @@
     "instance-modify-primary": true,
     "instance-modify-disks": false,
     "instance-reboot": true,
-    "instance-reinstall": true,
+    "# we do not yet have an OS provider, so no reinstall possible": null,
+    "instance-reinstall": false,
     "instance-rename": true,
     "instance-shutdown": true,
-    "instance-device-names": true,
+    "# this fails because it tries to add/remove disks during instance runtime": null,
+    "instance-device-names": false,
     "instance-device-hotplug": false,
     "instance-user-down": false,
-    "instance-communication": true,
+    "instance-communication": false,
 
     "job-list": true,
 

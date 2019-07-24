@@ -52,3 +52,7 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 Following is a list of tests from the ganeti QA testsuite which currently fail (possibly due to a broken test)
 - cluster-modify: 'user-shutdown' test fails
 - os: operation system definition tests fail on kvm-enabled hosts because it seems to assume xen and sets an invalid/non-existant kernel_path variable
+- alternative SSH port: the tests run a few iptables commands to "fake" SSH running on a different port. something with these tests fails and needs to be investigated. Probably related to the current test environment and not to the test itself.
+- instance export: needs more space on the root FS
+- instance reinstall: does not work with the noop OS provider
+- disk template 'plain': complains about to few spindles/PVs(?). need to understand how plain is exactly supposed to work and prepare/alter the test environment accordingly
