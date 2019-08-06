@@ -57,3 +57,4 @@ Following is a list of tests from the ganeti QA testsuite which currently fail (
 - instance reinstall: does not work with the noop OS provider
 - disk template 'plain': complains about to few spindles/PVs(?). need to understand how plain is exactly supposed to work and prepare/alter the test environment accordingly
 - instance-remove-drbd-offline: test fails while setting the node back online. The command `gnt-node modify --offline no gnt-test02` comes back with an interactive question and suggests using --readd instead.
+- renew-crypto: it generates new DSA keys and is not able to login with those afterwards. This needs to be changed to a newer key type
