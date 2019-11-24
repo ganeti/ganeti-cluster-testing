@@ -92,3 +92,10 @@
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/share/ganeti/testsuite/qa/qa_utils.py"
 
+- name: "QUICKFIX: install these packages to make the kvm-ifup-os script pass the tests in ganeti-testsuite"
+  apt:
+    name:
+      - net-tools
+      - ethtool
+      - dnsmasq
+
