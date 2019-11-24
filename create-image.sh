@@ -10,6 +10,7 @@ AUTHORIZED_KEY=false
 DEB_MIRROR="127.0.0.1:3142"
 NET_IP=dhcp
 DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,haveged,python,python3"
+LOGBASE="/tmp"
 
 usage() {
 	echo "This script prepares a qcow2 image with a debian installation"
@@ -27,6 +28,7 @@ usage() {
 	echo "-r [string]	Debian release to install (default: stable)"
 	echo "-m [ip]:[port]	IP/Port of the Debian mirror/proxy (default: 127.0.0.1:3142)"
 	echo "-a [string]	Install authorized key from given file into /root/.sshd/authorized_keys"
+	echo "-l [path]		Directory for logfiles (default: /tmp)"
 	echo
 	exit 1
 }
@@ -43,7 +45,7 @@ cleanup() {
 	rm -rf ${DEBOOTSTRAP_PATH}
 }
 
-while getopts "hfp:i:n:g:s:r:H:a:m:" opt; do
+while getopts "hfp:i:n:g:s:r:H:a:m:l:" opt; do
 	case $opt in
 		h)
 			usage
@@ -79,6 +81,9 @@ while getopts "hfp:i:n:g:s:r:H:a:m:" opt; do
 		m)
 			DEB_MIRROR=$OPTARG
 			;;
+		l)
+			LOGBASE=$OPTARG
+			;;
 	esac
 done
 
@@ -107,7 +112,11 @@ fi
 
 rm -f "${QCOW_IMG_PATH}"
 
-LOGFILE=$(mktemp -p /tmp ${NET_NAME}.XXXXX)
+if [ "${LOGBASE}" = "/tmp" ]; then
+	LOGFILE=$(mktemp -p /tmp ${NET_NAME}.XXXXX)
+else
+	LOGFILE="${LOGBASE}/${NET_NAME}.log"
+fi
 echo "Logging the process to ${LOGFILE}"
 
 # create and mount the image

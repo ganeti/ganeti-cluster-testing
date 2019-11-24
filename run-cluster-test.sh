@@ -4,6 +4,8 @@ PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
 DEBIANRELEASE="stable"
 GANETIVERSION="latest"
+LOGBASE="/var/log/ganeti-cluster-testing/"
+LOGPATH=${LOGBASE}
 
 usage() {
 	echo "This script sets up an environment to test different ganeti cluster configurations"
@@ -11,16 +13,22 @@ usage() {
 	echo "Parameters:"
 	echo
 	echo "-c [clustertype]	Type of cluster to create (see below)"
-    echo "-r [releasename]  Debian release to use (default: stable)"
-    echo "-g [version]      Version of the Ganeti Debian packages to install"
-    echo "                  When this parameter is set, the playbooks try to"
-    echo "                  force-install this version of the Ganeti Debian packages"
-    echo "                  If unset, it will just use the latest version available"
+	echo "-r [releasename]  Debian release to use (default: stable)"
+	echo "-g [version]      Version of the Ganeti Debian packages to install"
+	echo "                  When this parameter is set, the playbooks try to"
+	echo "                  force-install this version of the Ganeti Debian packages"
+	echo "                  If unset, it will just use the latest version available"
+	echo "-l [path]		Base directory for logging (default: /var/log/ganeti-cluster-testing)"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd-bridged"
 	echo
 	exit 1
+}
+
+echoAndLog() {
+	logLine=$@
+	echo "${logLine}" | tee -a "${LOGPATH}/main.log"
 }
 
 checkLock() {
@@ -29,16 +37,16 @@ checkLock() {
 	else
 		FOUNDPID=$(cat ${PIDFILE}|grep -oE "[0-9]+")
 		if [ -z "${FOUNDPID}" ]; then
-			echo "* Found lockfile with invalid content, removed"
+			echoAndLog "* Found lockfile with invalid content, removed"
 			rm ${PIDFILE}
 			return 0
 		else
 			if [ -d "/proc/${FOUNDPID}" ]; then
-				echo "* This script is already running as PID ${FOUNDPID}"
+				echoAndLog "* This script is already running as PID ${FOUNDPID}"
 				return 1
 			else
 				rm ${PIDFILE}
-				echo "* Found stale lock file, removed"
+				echoAndLog "* Found stale lock file, removed"
 				return 0
 			fi
 		fi
@@ -47,60 +55,60 @@ checkLock() {
 
 acquireLock() {
 	if echo $$ > ${PIDFILE}; then
-		echo "* Successfully acquired lock"
+		echoAndLog "* Successfully acquired lock"
 		return 0
 	else
-		echo "* Failed to acquire lock"
+		echoAndLog "* Failed to acquire lock"
 		return 1
 	fi
 }
 
 cleanupLock() {
 	rm ${PIDFILE}
-	echo "* Released lock"
+	echoAndLog "* Released lock"
 }
 
 killVms() {
-	echo "* Destroying all running VMs (if any)..."
-	echo
+	echoAndLog "* Destroying all running VMs (if any)..."
+	echoAndLog
 	for dom in $(virsh --quiet list --all|grep running | awk '{ print $2 }'); do
 		virsh destroy "${dom}"
 	done
-	echo
-	echo "* Finished destroying VMs"
-	echo
+	echoAndLog
+	echoAndLog "* Finished destroying VMs"
+	echoAndLog
 }
 
 createVms() {
 	numVMs=$1
-	echo "* Creating VM images..."
-	echo
+	echoAndLog "* Creating VM images..."
+	echoAndLog
 	for i in `seq 1 ${numVMs}`; do
-		./create-image.sh -H gnt-test0${i} -r ${DEBIANRELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -f
+		./create-image.sh -H gnt-test0${i} -r ${DEBIANRELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f 
 	done
-	echo
-	echo "* Finished creating VM images"
-	echo
+	echoAndLog
+	echoAndLog "* Finished creating VM images"
+	echoAndLog
 }
 
 bootVms() {
 	numVMs=$1
 	TMPFILE=$(mktemp)
-	echo "* Creating / booting VMs"
-	echo
+	echoAndLog "* Creating / booting VMs"
+	echoAndLog
 	for i in `seq 1 ${numVMs}`; do
 		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template.xml > $TMPFILE
-		virsh create ${TMPFILE}
+		virsh create ${TMPFILE} | tee -a "${LOGPATH}/main.log"
 	done
 	rm $TMPFILE
-	echo "* Finished creating / booting VMs"
-	echo
+	echoAndLog "* Finished creating / booting VMs"
+	echoAndLog
 }
 
 runPlaybook() {
 	play=$1
-	echo "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION}
+	echoAndLog "* Prepare VMs/initialise ganeti cluster"
+	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}/ansible-cluster-setup.log"
 }
 
 runQaScript() {
@@ -109,8 +117,11 @@ runQaScript() {
     cp roles/ganeti/files/ssh_private_key "${tmpkey}"
     chmod 600 "${tmpkey}"
     scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" qa-configs/${recipe}.json 192.168.122.11:/tmp/
-    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.json"
-    rm "${tmpkey}"
+    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.json" | tee "${LOGPATH}/qa-script.output"
+    qaScriptReturnCode=$?
+    scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" 192.168.122.11:/var/log/ganeti/qa-output.log "${LOGPATH}/qa-script.log
+    "rm "${tmpkey}"
+    return $qaScriptReturnCode
 }
 
 while getopts "hc:r:g:" opt; do
@@ -132,7 +143,7 @@ while getopts "hc:r:g:" opt; do
 done
 
 if [ -z "$CLUSTERTYPE" ]; then
-	echo "Please specify cluster type to build/test"
+	echoAndLog "Please specify cluster type to build/test"
 	exit 1
 fi
 
@@ -145,6 +156,9 @@ case $CLUSTERTYPE in
 		exit 1
 		;;
 esac
+
+LOGPATH=${LOGBASE}/${CLUSTERTYPE}/$(date --utc +%F_%k-%M-%S)/
+mkdir -p "${LOGPATH}"
 
 if checkLock; then
 	if ! acquireLock; then exit 1; fi
@@ -169,8 +183,8 @@ SCRIPT_VMS_RUNTIME_M=$((SCRIPT_VMS_RUNTIME / 60))
 SCRIPT_QA_RUNTIME=$((SCRIPT_FINISH_QA - SCRIPT_START_QA))
 SCRIPT_QA_RUNTIME_M=$((SCRIPT_QA_RUNTIME / 60))
 
-echo "* Script execution time (VM building): ${SCRIPT_VMS_RUNTIME}s (~${SCRIPT_VMS_RUNTIME_M}m)"
-echo "* Script execution time (QA scripts): ${SCRIPT_QA_RUNTIME}s (~${SCRIPT_QA_RUNTIME_M}m)"
+echoAndLog "* Script execution time (VM building): ${SCRIPT_VMS_RUNTIME}s (~${SCRIPT_VMS_RUNTIME_M}m)"
+echoAndLog "* Script execution time (QA scripts): ${SCRIPT_QA_RUNTIME}s (~${SCRIPT_QA_RUNTIME_M}m)"
 
 cleanupLock
 
