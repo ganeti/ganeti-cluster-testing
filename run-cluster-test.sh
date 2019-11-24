@@ -3,6 +3,7 @@
 PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
 DEBIANRELEASE="stable"
+GANETIVERSION="latest"
 
 usage() {
 	echo "This script sets up an environment to test different ganeti cluster configurations"
@@ -11,6 +12,10 @@ usage() {
 	echo
 	echo "-c [clustertype]	Type of cluster to create (see below)"
     echo "-r [releasename]  Debian release to use (default: stable)"
+    echo "-g [version]      Version of the Ganeti Debian packages to install"
+    echo "                  When this parameter is set, the playbooks try to"
+    echo "                  force-install this version of the Ganeti Debian packages"
+    echo "                  If unset, it will just use the latest version available"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd-bridged"
@@ -95,7 +100,7 @@ bootVms() {
 runPlaybook() {
 	play=$1
 	echo "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml
+	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION}
 }
 
 runQaScript() {
