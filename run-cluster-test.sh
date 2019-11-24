@@ -2,6 +2,8 @@
 
 PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
+DEBIANRELEASE="stable"
+GANETIVERSION="latest"
 
 usage() {
 	echo "This script sets up an environment to test different ganeti cluster configurations"
@@ -9,6 +11,11 @@ usage() {
 	echo "Parameters:"
 	echo
 	echo "-c [clustertype]	Type of cluster to create (see below)"
+    echo "-r [releasename]  Debian release to use (default: stable)"
+    echo "-g [version]      Version of the Ganeti Debian packages to install"
+    echo "                  When this parameter is set, the playbooks try to"
+    echo "                  force-install this version of the Ganeti Debian packages"
+    echo "                  If unset, it will just use the latest version available"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd-bridged"
@@ -69,7 +76,7 @@ createVms() {
 	echo "* Creating VM images..."
 	echo
 	for i in `seq 1 ${numVMs}`; do
-		./create-image.sh -H gnt-test0${i} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -f
+		./create-image.sh -H gnt-test0${i} -r ${DEBIANRELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -f
 	done
 	echo
 	echo "* Finished creating VM images"
@@ -93,7 +100,7 @@ bootVms() {
 runPlaybook() {
 	play=$1
 	echo "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml
+	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION}
 }
 
 runQaScript() {
@@ -106,7 +113,7 @@ runQaScript() {
     rm "${tmpkey}"
 }
 
-while getopts "hc:" opt; do
+while getopts "hc:r:" opt; do
 	case $opt in
 		h)
 			usage
@@ -115,6 +122,9 @@ while getopts "hc:" opt; do
 		c)
 			CLUSTERTYPE=$OPTARG
 			;;
+        r)
+            DEBIANRELEASE=$OPTARG
+            ;;
 	esac
 done
 

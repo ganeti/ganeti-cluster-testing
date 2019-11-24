@@ -1,6 +1,6 @@
 ---
 
-- name: Install required packages
+- name: Install required packages (latest packages available)
   apt:
     name: 
       - vlan
@@ -11,6 +11,22 @@
       - ganeti-instance-debootstrap
       - ganeti-os-noop
       - ganeti-testsuite
+  when:
+    - ganeti_version == "latest"
+
+- name: Install required packages (with a specific version)
+  apt:
+    name:
+      - vlan
+      - bridge-utils
+      - drbd-utils
+      - qemu-kvm
+      - "ganeti={{ ganeti_version }}"
+      - ganeti-instance-debootstrap
+      - ganeti-os-noop
+      - "ganeti-testsuite={{ ganeti_version }}"
+  when:
+    - ganeti_version == "latest"
 
 - name: Configure DRBD module options
   copy:
