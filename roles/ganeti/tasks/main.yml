@@ -26,7 +26,7 @@
       - ganeti-os-noop
       - "ganeti-testsuite={{ ganeti_version }}"
   when:
-    - ganeti_version == "latest"
+    - ganeti_version != "latest"
 
 - name: Configure DRBD module options
   copy:

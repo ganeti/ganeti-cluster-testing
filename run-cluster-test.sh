@@ -113,7 +113,7 @@ runQaScript() {
     rm "${tmpkey}"
 }
 
-while getopts "hc:r:" opt; do
+while getopts "hc:r:g:" opt; do
 	case $opt in
 		h)
 			usage
@@ -122,9 +122,12 @@ while getopts "hc:r:" opt; do
 		c)
 			CLUSTERTYPE=$OPTARG
 			;;
-        r)
-            DEBIANRELEASE=$OPTARG
-            ;;
+		r)
+			DEBIANRELEASE=$OPTARG
+			;;
+		g)
+			GANETIVERSION=$OPTARG
+			;;
 	esac
 done
 
