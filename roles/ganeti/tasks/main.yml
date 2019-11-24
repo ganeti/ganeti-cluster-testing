@@ -73,6 +73,14 @@
     group: root
     mode: "0640"
 
+- name: Install ganeti-instance-debootstrap default config file
+  copy:
+    src: debootstrap-default.conf
+    dest: /etc/ganeti/instance-debootstrap/variants/default.conf
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: "QUICKFIX: install qa/colors.py manually as it is missing in ganeti-testsuite"
   copy:
     src: colors.py
