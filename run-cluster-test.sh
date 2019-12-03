@@ -31,6 +31,13 @@ echoAndLog() {
 	echo "${logLine}" | tee -a "${LOGPATH}/main.log"
 }
 
+checkTheForce() {
+	if [[ $EUID -ne 0 ]]; then
+		echo "This script must be run as root"
+		exit 1
+	fi
+}
+
 checkLock() {
 	if ! [ -f ${PIDFILE} ]; then
 		return 0
@@ -151,6 +158,8 @@ while getopts "hc:r:g:" opt; do
 			;;
 	esac
 done
+
+checkTheForce
 
 if [ -z "$CLUSTERTYPE" ]; then
 	echoAndLog "Please specify cluster type to build/test"
