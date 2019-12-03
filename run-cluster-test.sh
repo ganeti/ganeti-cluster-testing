@@ -166,7 +166,7 @@ case $CLUSTERTYPE in
 		;;
 esac
 
-LOGPATH=${LOGBASE}/${CLUSTERTYPE}/$(date --utc +%F_%k-%M-%S)/
+LOGPATH=${LOGBASE}/${CLUSTERTYPE}/$(date --utc +%F_%H-%M-%S)/
 mkdir -p "${LOGPATH}"
 
 if checkLock; then
