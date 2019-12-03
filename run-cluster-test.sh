@@ -183,7 +183,7 @@ bootVms 3
 runPlaybook $CLUSTERTYPE
 SCRIPT_FINISH_VMS=`date +%s`
 SCRIPT_START_QA=`date +%s`
-runQaScript $CLUSTERTYPE
+QA_RESULT=$(runQaScript $CLUSTERTYPE)
 SCRIPT_FINISH_QA=`date +%s`
 
 SCRIPT_VMS_RUNTIME=$((SCRIPT_FINISH_VMS - SCRIPT_START_VMS))
@@ -197,4 +197,4 @@ echoAndLog "* Script execution time (QA scripts): ${SCRIPT_QA_RUNTIME}s (~${SCRI
 
 cleanupLock
 
-
+exit $QA_RESULT
