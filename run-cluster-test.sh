@@ -113,7 +113,11 @@ bootVms() {
 runPlaybook() {
 	play=$1
 	echoAndLog "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}/ansible-cluster-setup.log"
+	if ! ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}/ansible-cluster-setup.log"; then
+		echoAndLog "* Preparing the VMs/initialising ganeti cluster failed"
+		exit 1
+	fi
+
 }
 
 runQaScript() {
