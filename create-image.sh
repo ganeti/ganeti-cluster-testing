@@ -9,7 +9,7 @@ FORCE_OVERWRITE=false
 AUTHORIZED_KEY=false
 DEB_MIRROR="127.0.0.1:3142"
 NET_IP=dhcp
-DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,haveged,python,python3"
+DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,haveged,python,python3,wget,ca-certificates"
 LOGBASE="/tmp"
 
 usage() {
