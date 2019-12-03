@@ -1,4 +1,18 @@
 ---
+- name: Install ganeti nightly repository key
+  apt_key:
+    url: https://rbott-guest.pages.debian.net/ganeti-build/ganeti-nightly-builds.asc
+    state: present
+  when:
+    - ganeti_version == "nightly"
+
+- name: Install ganeti nightly repository
+  apt_repository:
+    repo: deb https://rbott-guest.pages.debian.net/ganeti-build buster main
+    state: present
+    update_cache: yes
+  when:
+    - ganeti_version == "nightly"
 
 - name: Install required packages (latest packages available)
   apt:
@@ -12,7 +26,7 @@
       - ganeti-os-noop
       - ganeti-testsuite
   when:
-    - ganeti_version == "latest"
+    - ganeti_version == "latest" or ganeti_version == "nightly"
 
 - name: Install required packages (with a specific version)
   apt:
