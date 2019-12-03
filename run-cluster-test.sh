@@ -83,6 +83,11 @@ createVms() {
 	numVMs=$1
 	echoAndLog "* Creating VM images..."
 	echoAndLog
+	if [ ! -f "/root/.ssh/id_rsa_ganeti_testing.pub" ]; then
+		echoAndLog "* There is no SSH key yet for VM communication - creating one..."
+		echoAndLog
+		ssh-keygen -b 2048 -f /root/.ssh/id_rsa_ganeti_testing -q -N ""
+	fi
 	for i in `seq 1 ${numVMs}`; do
 		./create-image.sh -H gnt-test0${i} -r ${DEBIANRELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f 
 	done
