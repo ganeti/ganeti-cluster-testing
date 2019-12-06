@@ -134,9 +134,9 @@ runQaScript() {
     cp roles/ganeti/files/ssh_private_key "${tmpkey}"
     chmod 600 "${tmpkey}"
     scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" qa-configs/${recipe}.json 192.168.122.11:/tmp/
-    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.json" | tee "${LOGPATH}/qa-script.output"
+    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.json" 
     qaScriptReturnCode=$?
-    scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" 192.168.122.11:/var/log/ganeti/qa-output.log "${LOGPATH}/qa-script.log
+    scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" 192.168.122.11:/var/log/ganeti/qa-output.log "${LOGPATH}/qa-script.log"
     "rm "${tmpkey}"
     return $qaScriptReturnCode
 }
@@ -193,7 +193,8 @@ bootVms 3
 runPlaybook $CLUSTERTYPE
 SCRIPT_FINISH_VMS=`date +%s`
 SCRIPT_START_QA=`date +%s`
-QA_RESULT=$(runQaScript $CLUSTERTYPE)
+runQaScript $CLUSTERTYPE
+QA_RESULT=$?
 SCRIPT_FINISH_QA=`date +%s`
 
 SCRIPT_VMS_RUNTIME=$((SCRIPT_FINISH_VMS - SCRIPT_START_VMS))
