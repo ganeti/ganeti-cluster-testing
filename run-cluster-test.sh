@@ -137,7 +137,7 @@ runQaScript() {
     ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" -t 192.168.122.11 "export PYTHONPATH=\"/usr/share/ganeti/default\"; cd /usr/share/ganeti/testsuite/qa; ./ganeti-qa.py --yes-do-it /tmp/${recipe}.json" 
     qaScriptReturnCode=$?
     scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" 192.168.122.11:/var/log/ganeti/qa-output.log "${LOGPATH}/qa-script.log"
-    "rm "${tmpkey}"
+    rm "${tmpkey}"
     return $qaScriptReturnCode
 }
 
