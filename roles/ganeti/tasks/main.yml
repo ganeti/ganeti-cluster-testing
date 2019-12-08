@@ -111,13 +111,30 @@
     group: root
     mode: "0644"
 
-- name: "QUICKFIX: install qa/colors.py manually as it is missing in ganeti-testsuite"
+- name: Install ganeti rapi users file (1/2)
+  file:
+    path: /var/lib/ganeti/rapi
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install ganeti rapi users file (2/2)
   copy:
-    src: colors.py
-    dest: /usr/share/ganeti/testsuite/qa/colors.py
+    dest: /var/lib/ganeti/rapi/users
+    content: "ganeti-qa ganeti-qa write"
     owner: root
     group: root
     mode: "0644"
+
+- name: Configure RAPI daemon to listen on any port
+  lineinfile:
+    path: /etc/default/ganeti
+    line: 'RAPI_ARGS="--require-authentication"'
+    regexp: '^RAPI_ARGS'
+    state: present
+  notify:
+    - Restart ganeti
 
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/share/ganeti/testsuite/qa/qa_utils.py"

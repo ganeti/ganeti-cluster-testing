@@ -1,0 +1,6 @@
+---
+
+- name: Restart ganeti
+  service:
+    name: ganeti
+    state: restarted
