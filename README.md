@@ -16,7 +16,7 @@ These scripts and Ansible playbooks/roles allow you to setup a N-node Ganeti clu
   - qemu-utils
   - apt-cacher-ng
   - ansible
-- run the bash script to kick of the build process: `run-cluster-test.sh -c [your-cluster-scenario]` This will create the required VMs, boot them and also kick of the Ansible playbook (named your-cluster-scenario.yml) to do the final setup and initialise the Ganeti cluster, add nodes etc.
+- run the bash script to kick off the build process: `run-cluster-test.sh -c [your-cluster-scenario] -r [debian-release-name] -g [ganeti-version]` This will create the required VMs, boot them and also kick of the Ansible playbook (named your-cluster-scenario.yml) to do the final setup and initialise the Ganeti cluster, add nodes etc. The `-r` and `-g` parameters are optional and default to `stable` and `latest-in-the-archives` respectively.
 
 ## How to extend
 
@@ -24,12 +24,12 @@ If you want to create a new flavor of ganeti cluster setup (e.g. using a central
 
 ## How fast is this?
 
-It takes about 10 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). Things should look better on more recent hardware, especially with flash disks in place.
+It takes about 10 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). The QA suite needs another ~90 minutes as of now.
 
 ## TODOs
 
 ### Improvements
-- better logging in shell scripts
+- [*done*] better logging in shell scripts
 - better error handling in shell scripts (traps etc.)
 - better error recovery (detect/cleanup a previous failed run)
 - [*done*] add locking (and stale lock detection)
@@ -39,10 +39,10 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 
 ### Missing / New Features
 - [*done*] build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
-- find a way to capture/save/provide the output/results of the build/test process
+- [*done*] find a way to capture/save/provide the output/results of the build/test process (Update: logs are stored locally and output is also conserved through Gitlab runner)
 - find a way to provision operating systems on instances in the currently existing DRBD cluster scenario for actual tests
 
-### Playbooks for other cluster types:
+### Playbook ideas for other cluster types:
 - DRBD disks with different variants of networking and/or different OS providers
 - flatfile / shared file clusters
 - other hypervisors (as long as they are usable within KVM)
