@@ -34,8 +34,8 @@ prepareLogDirectory() {
 }
 
 echoAndLog() {
-	logLine=$@
-	echo "${logLine}" | tee -a "${LOGPATH}/main.log"
+	local logLine=$@
+	echo "${logLine}" | tee -a "${LOGPATH}main.log"
 }
 
 checkTheForce() {
@@ -49,7 +49,7 @@ checkLock() {
 	if ! [ -f ${PIDFILE} ]; then
 		return 0
 	else
-		FOUNDPID=$(cat ${PIDFILE}|grep -oE "[0-9]+")
+		local FOUNDPID=$(cat ${PIDFILE}|grep -oE "[0-9]+")
 		if [ -z "${FOUNDPID}" ]; then
 			echoAndLog "* Found lockfile with invalid content, removed"
 			rm ${PIDFILE}
@@ -94,7 +94,7 @@ killVms() {
 }
 
 createVms() {
-	numVMs=$1
+	local numVMs=$1
 	echoAndLog "* Creating VM images..."
 	echoAndLog
 	if [ ! -f "/root/.ssh/id_rsa_ganeti_testing.pub" ]; then
@@ -111,23 +111,23 @@ createVms() {
 }
 
 bootVms() {
-	numVMs=$1
-	TMPFILE=$(mktemp)
+	local numVMs=$1
+	local TMPFILE=$(mktemp)
 	echoAndLog "* Creating / booting VMs"
 	echoAndLog
 	for i in `seq 1 ${numVMs}`; do
-		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template.xml > $TMPFILE
-		virsh create ${TMPFILE} | tee -a "${LOGPATH}/main.log"
+		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template.xml > ${TMPFILE}
+		virsh create ${TMPFILE} | tee -a "${LOGPATH}main.log"
 	done
-	rm $TMPFILE
+	rm ${TMPFILE}
 	echoAndLog "* Finished creating / booting VMs"
 	echoAndLog
 }
 
 runPlaybook() {
-	play=$1
+	local play=$1
 	echoAndLog "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}/ansible-cluster-setup.log"
+	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}ansible-cluster-setup.log"
 	if [ "${PIPESTATUS[0]}" -ne "0" ]; then
 		echoAndLog "* Preparing the VMs/initialising ganeti cluster failed"
 		exit 1
@@ -136,8 +136,8 @@ runPlaybook() {
 }
 
 runQaScript() {
-    recipe=$1
-    tmpkey=$(mktemp)
+    local recipe=$1
+    local tmpkey=$(mktemp)
     cp roles/ganeti/files/ssh_private_key "${tmpkey}"
     chmod 600 "${tmpkey}"
     scp -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -i "${tmpkey}" qa-configs/${recipe}.json 192.168.122.11:/tmp/
