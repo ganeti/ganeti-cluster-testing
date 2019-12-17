@@ -2,7 +2,8 @@
 
 PIDFILE="/run/ganeti-cluster-testing.pid"
 CLUSTERTYPE=""
-DEBIANRELEASE="stable"
+OS_FLAVOR="debian"
+OS_RELEASE="stable"
 GANETIVERSION="latest"
 LOGBASE="/var/log/ganeti-cluster-testing/"
 LOGPATH=${LOGBASE}
@@ -12,13 +13,14 @@ usage() {
 	echo
 	echo "Parameters:"
 	echo
-	echo "-c [clustertype]	Type of cluster to create (see below)"
-	echo "-r [releasename]  Debian release to use (default: stable)"
+	echo "-c [clustertype]  Type of cluster to create (see below)"
+	echo "-f [osflavor]     Set the OS flavor to use (default: debian)"
+	echo "-r [releasename]  OS release to use (default: stable)"
 	echo "-g [version]      Version of the Ganeti Debian packages to install"
 	echo "                  When this parameter is set, the playbooks try to"
 	echo "                  force-install this version of the Ganeti Debian packages"
 	echo "                  If unset, it will just use the latest version available"
-	echo "-l [path]		Base directory for logging (default: /var/log/ganeti-cluster-testing)"
+	echo "-l [path]         Base directory for logging (default: /var/log/ganeti-cluster-testing)"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd-bridged"
@@ -103,7 +105,9 @@ createVms() {
 		ssh-keygen -b 2048 -f /root/.ssh/id_rsa_ganeti_testing -q -N ""
 	fi
 	for i in `seq 1 ${numVMs}`; do
-		./create-image.sh -H gnt-test0${i} -r ${DEBIANRELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f 
+		set -e
+		./create-image.sh -H gnt-test0${i} -t ${OS_FLAVOR} -r ${OS_RELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f
+		set +e
 	done
 	echoAndLog
 	echoAndLog "* Finished creating VM images"
@@ -150,7 +154,7 @@ runQaScript() {
     return $qaScriptReturnCode
 }
 
-while getopts "hc:r:g:" opt; do
+while getopts "hc:f:r:g:" opt; do
 	case $opt in
 		h)
 			usage
@@ -159,8 +163,11 @@ while getopts "hc:r:g:" opt; do
 		c)
 			CLUSTERTYPE=$OPTARG
 			;;
+		f)
+			OS_FLAVOR=$OPTARG
+			;;
 		r)
-			DEBIANRELEASE=$OPTARG
+			OS_RELEASE=$OPTARG
 			;;
 		g)
 			GANETIVERSION=$OPTARG

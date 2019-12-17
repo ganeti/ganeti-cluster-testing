@@ -1,7 +1,8 @@
 #!/bin/bash
 
 NET_NAME=auto-vm
-DEBIANVERSION=stable
+FLAVOR=debian
+RELEASE=stable
 DEBOOTSTRAP_PATH=$(mktemp -d -p /tmp/ debootstrap.XXXXX)
 QCOW_IMG_PATH=""
 QCOW_IMG_SIZE=2G
@@ -25,7 +26,8 @@ usage() {
 	echo "-n [netmask]	Netmask of the VM (default: dhcp)"
 	echo "-g [ip]		Gateway of the VM (default: dhcp)"
 	echo "-s [int]M|G|T	Maximum size of the qcow2 image (default: 2G)"
-	echo "-r [string]	Debian release to install (default: stable)"
+	echo "-t [string]	OS flavor to install (default: debian"	 
+	echo "-r [string]	OS release to install (default: stable)"
 	echo "-m [ip]:[port]	IP/Port of the Debian mirror/proxy (default: 127.0.0.1:3142)"
 	echo "-a [string]	Install authorized key from given file into /root/.sshd/authorized_keys"
 	echo "-l [path]		Directory for logfiles (default: /tmp)"
@@ -45,7 +47,7 @@ cleanup() {
 	rm -rf ${DEBOOTSTRAP_PATH}
 }
 
-while getopts "hfp:i:n:g:s:r:H:a:m:l:" opt; do
+while getopts "hfp:i:n:g:s:t:r:H:a:m:l:" opt; do
 	case $opt in
 		h)
 			usage
@@ -72,8 +74,11 @@ while getopts "hfp:i:n:g:s:r:H:a:m:l:" opt; do
 		s)
 			QCOW_IMG_SIZE=$OPTARG
 			;;
+		t)
+			FLAVOR=$OPTARG
+			;;
 		r)
-			DEBIANVERSION=$OPTARG
+			RELEASE=$OPTARG
 			;;
 		a)
 			AUTHORIZED_KEY=$OPTARG
@@ -103,6 +108,14 @@ if [ -z "$DEBOOTSTRAP_PATH" ]; then
 	echo "Error: Could not create temp directory for debootstrap"
 	exit 1
 fi
+
+case "$FLAVOR" in
+	debian)
+		;;
+	*)
+		echo "Error: currently only the debian flavor is supported!"
+		exit 1
+esac
 
 # preperations
 if ! modprobe nbd; then
@@ -135,7 +148,7 @@ set +e
 
 # install debian
 echo "Running debootstrap on ${DEBOOTSTRAP_PATH}"
-if ! debootstrap --include=${DEFAULT_PACKAGES} ${DEBIANVERSION} ${DEBOOTSTRAP_PATH} http://${DEB_MIRROR}/debian &>> ${LOGFILE}; then
+if ! debootstrap --include=${DEFAULT_PACKAGES} ${RELEASE} ${DEBOOTSTRAP_PATH} http://${DEB_MIRROR}/debian &>> ${LOGFILE}; then
 	echo "failed... cleaning up"
 	cleanup
 fi
