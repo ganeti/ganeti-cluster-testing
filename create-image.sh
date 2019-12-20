@@ -9,8 +9,8 @@ QCOW_IMG_SIZE=2G
 FORCE_OVERWRITE=false
 AUTHORIZED_KEY=false
 DEB_MIRROR="127.0.0.1:3142"
+DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,wget,ca-certificates,ifupdown,python,python3,haveged"
 NET_IP=dhcp
-DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,haveged,python,python3,wget,ca-certificates"
 LOGBASE="/tmp"
 
 usage() {
@@ -111,9 +111,16 @@ fi
 
 case "$FLAVOR" in
 	debian)
+		LINUX_KERNEL_PKG="linux-image-amd64"
+		COMPONENTS="main,contrib,non-free"
+
+		;;
+	ubuntu)
+		LINUX_KERNEL_PKG="linux-generic"
+		COMPONENTS="main,universe,multiverse"
 		;;
 	*)
-		echo "Error: currently only the debian flavor is supported!"
+		echo "Error: currently only ubuntu and debian flavors are supported!"
 		exit 1
 esac
 
@@ -148,7 +155,7 @@ set +e
 
 # install debian
 echo "Running debootstrap on ${DEBOOTSTRAP_PATH}"
-if ! debootstrap --include=${DEFAULT_PACKAGES} ${RELEASE} ${DEBOOTSTRAP_PATH} http://${DEB_MIRROR}/debian &>> ${LOGFILE}; then
+if ! debootstrap --include=${DEFAULT_PACKAGES} --components=${COMPONENTS} ${RELEASE} ${DEBOOTSTRAP_PATH} http://${DEB_MIRROR}/${FLAVOR} &>> ${LOGFILE}; then
 	echo "failed... cleaning up"
 	cleanup
 fi
@@ -213,7 +220,7 @@ mount --bind /dev/ ${DEBOOTSTRAP_PATH}/dev  &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} mount -t proc none /proc &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} mount -t sysfs none /sys &>> ${LOGFILE}
 echo root:root | chroot ${DEBOOTSTRAP_PATH} chpasswd &>> ${LOGFILE}
-LANG=C DEBIAN_FRONTEND=noninteractive chroot ${DEBOOTSTRAP_PATH} apt-get install -y --force-yes -q linux-image-amd64 grub-pc &>> ${LOGFILE}
+LANG=C DEBIAN_FRONTEND=noninteractive chroot ${DEBOOTSTRAP_PATH} apt-get install -y --force-yes -q ${LINUX_KERNEL_PKG} grub-pc &>> ${LOGFILE}
 sed -i "s|^GRUB_CMDLINE_LINUX=.\+|GRUB_CMDLINE_LINUX='net.ifnames=0 biosdevname=0'|" ${DEBOOTSTRAP_PATH}/etc/default/grub &>> ${LOGFILE} 
 chroot ${DEBOOTSTRAP_PATH} grub-install /dev/nbd0 &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} update-grub &>> ${LOGFILE}
