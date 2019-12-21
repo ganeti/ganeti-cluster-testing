@@ -4,7 +4,7 @@
   "# comments. As a work-around, comments are keys starting with a hash": null,
   "# sign (#).": null,
 
-  "name": "kvm-drbd-bridged",
+  "name": "kvm-drbd_file_sharedfile-bridged",
 
   "primary_ip_version": 4,
 
@@ -139,9 +139,9 @@
 
     "instance-add-plain-disk": false,
     "instance-add-file": true,
-    "instance-add-shared-file": false,
+    "instance-add-shared-file": true,
     "instance-add-drbd-disk": true,
-    "instance-add-diskless": true,
+    "instance-add-diskless": false,
     "instance-add-rbd": false,
     "instance-add-gluster": false,
     "instance-add-restricted-by-disktemplates": true,

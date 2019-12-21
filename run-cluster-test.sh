@@ -23,7 +23,7 @@ usage() {
 	echo "-l [path]         Base directory for logging (default: /var/log/ganeti-cluster-testing)"
 	echo
 	echo "Currently known cluster types:"
-	echo " kvm-drbd-bridged"
+	echo " kvm-drbd_file_sharedfile-bridged"
 	echo
 	exit 1
 }
@@ -183,7 +183,7 @@ if [ -z "$CLUSTERTYPE" ]; then
 fi
 
 case $CLUSTERTYPE in
-	kvm-drbd-bridged)
+	kvm-drbd_file_sharedfile-bridged)
 		NUMBER_OF_VMS=3
 		;;
 	*)

@@ -19,7 +19,6 @@
     name: 
       - vlan
       - bridge-utils
-      - drbd-utils
       - qemu-kvm
       - ganeti
       - ganeti-instance-debootstrap
@@ -41,19 +40,6 @@
       - "ganeti-testsuite={{ ganeti_version }}"
   when:
     - ganeti_version != "latest" and ganeti_version != "nightly"
-
-- name: Configure DRBD module options
-  copy:
-    dest: /etc/modprobe.d/drbd.conf
-    content: "options drbd minor_count=128 usermode_helper=/bin/true"
-    owner: root
-    group: root
-    mode: "0644"
- 
-- name: Load DRBD module
-  modprobe:
-    name: drbd
-    state: present
 
 - name: Make sure cluster node names are present in /etc/hosts
   lineinfile:
@@ -135,6 +121,19 @@
     state: present
   notify:
     - Restart ganeti
+
+- name: Create file storage path
+  file:
+    path: /srv/ganeti/file-storage
+    state: directory
+
+- name: Whitelist shared-file storage path in /etc/ganeti/file-storage-paths
+  copy:
+    src: file-storage-paths
+    dest: /etc/ganeti/file-storage-paths
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/share/ganeti/testsuite/qa/qa_utils.py"
