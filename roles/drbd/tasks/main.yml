@@ -1,0 +1,21 @@
+---
+
+- name: install DRBD related packages
+  apt:
+    name: 
+      - drbd-utils
+    state: present
+
+- name: Configure DRBD module options
+  copy:
+    dest: /etc/modprobe.d/drbd.conf
+    content: "options drbd minor_count=128 usermode_helper=/bin/true"
+    owner: root
+    group: root
+    mode: "0644"
+ 
+- name: Load DRBD module
+  modprobe:
+    name: drbd
+    state: present
+
