@@ -1,0 +1,26 @@
+---
+
+- name: Install required packages
+  apt:
+    name:
+      - nfs-kernel-server
+      - nfs-common
+    state: present
+
+- name: Create nfs server directory
+  file:
+    path: /srv/ganeti/shared-file-storage
+    state: directory
+
+- name: Export shared-file-storage folder
+  lineinfile:
+    path: /etc/exports
+    line: "/srv/ganeti/shared-file-storage  192.168.122.0/24(rw,no_root_squash)"
+
+- name: Restart NFS server
+  service:
+    name: nfs-kernel-server
+    enabled: yes
+    state: restarted
+
+

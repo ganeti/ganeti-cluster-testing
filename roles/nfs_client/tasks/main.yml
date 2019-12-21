@@ -1,0 +1,19 @@
+---
+
+- name: Install required packages
+  apt:
+    name:
+      - nfs-common
+    state: present
+
+- name: Create nfs client directory
+  file:
+    path: /srv/ganeti/shared-file-storage
+    state: directory
+
+- name: mount nfs share
+  mount:
+    path: /srv/ganeti/shared-file-storage
+    src: "192.168.122.11:/srv/ganeti/shared-file-storage"
+    fstype: nfs
+    state: mounted
