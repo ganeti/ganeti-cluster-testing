@@ -106,7 +106,7 @@ createVms() {
 	fi
 	for i in `seq 1 ${numVMs}`; do
 		set -e
-		./create-image.sh -H gnt-test0${i} -t ${OS_FLAVOR} -r ${OS_RELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 27G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f
+		./create-image.sh -H gnt-test0${i} -t ${OS_FLAVOR} -r ${OS_RELEASE} -m "192.168.122.1:3142" -i 192.168.122.1${i} -n 255.255.255.0 -g 192.168.122.1 -s 40G -a /root/.ssh/id_rsa_ganeti_testing.pub -p /var/lib/libvirt/images/gnt-test0${i}.img -l ${LOGPATH} -f
 		set +e
 	done
 	echoAndLog

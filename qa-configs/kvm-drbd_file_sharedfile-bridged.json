@@ -4,30 +4,37 @@
   "# comments. As a work-around, comments are keys starting with a hash": null,
   "# sign (#).": null,
 
-  "name": "kvm-drbd_file_sharedfile-bridged",
+  "name": "staging-cluster.ganeti.org",
 
   "primary_ip_version": 4,
 
   "vg-name": "gnt",
 
   "os": "noop",
-  "maxmem": "1024M",
-  "minmem": "512M",
+  "maxmem": "768M",
+  "minmem": "256M",
+
+  "enabled-disk-templates": [
+    "plain",
+    "drbd",
+    "file",
+    "sharedfile"
+  ],
 
   "# Lists of disks": null,
   "disks": [
     {
-      "size": "2G",
+      "size": "768M",
       "spindles": 1,
       "name": "disk0",
-      "growth": "2G",
+      "growth": "512M",
       "spindles-growth": 1
     },
     {
-      "size": "1G",
+      "size": "512M",
       "spindles": 1,
       "name": "disk1",
-      "growth": "768M",
+      "growth": "512M",
       "spindles-growth": 0
     }
   ],

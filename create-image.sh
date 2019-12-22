@@ -146,8 +146,8 @@ qemu-nbd -c /dev/nbd0 ${QCOW_IMG_PATH} &>> ${LOGFILE}
 # TODO: find best partition alignments (remove -s param to see parted error message)
 parted -s /dev/nbd0 mktable msdos &>> ${LOGFILE}
 parted -s /dev/nbd0 mkpart primary 0% 1024MB &>> ${LOGFILE}
-parted -s /dev/nbd0 mkpart primary 1026MB 4096MB &>> ${LOGFILE}
-parted -s /dev/nbd0 mkpart primary 4098MB 100% &>> ${LOGFILE}
+parted -s /dev/nbd0 mkpart primary 1026MB 16384MB &>> ${LOGFILE}
+parted -s /dev/nbd0 mkpart primary 16386MB 100% &>> ${LOGFILE}
 mkswap /dev/nbd0p1 &>> ${LOGFILE}
 mkfs.ext4 /dev/nbd0p2 &>> ${LOGFILE}
 mount /dev/nbd0p2 ${DEBOOTSTRAP_PATH} &>> ${LOGFILE}
