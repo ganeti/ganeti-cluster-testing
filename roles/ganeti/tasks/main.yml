@@ -135,6 +135,22 @@
     group: root
     mode: "0644"
 
+- name: Install statically linked busybox version for custom initrd
+  apt:
+    name: busybox-static
+    state: present
+
+- name: Copy script to create busybox initrd
+  copy:
+    src: create_busybox_initrd.sh
+    dest: /usr/local/sbin/create_busybox_initrd.sh
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Create busybox initrd for use in ganeti instances
+  command: /usr/local/sbin/create_busybox_initrd.sh
+
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/share/ganeti/testsuite/qa/qa_utils.py"
 
