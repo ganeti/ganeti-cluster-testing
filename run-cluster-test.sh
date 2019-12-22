@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PIDFILE="/run/ganeti-cluster-testing.pid"
+MODE="run_and_build"
 CLUSTERTYPE=""
 OS_FLAVOR="debian"
 OS_RELEASE="stable"
@@ -21,6 +22,7 @@ usage() {
 	echo "                  force-install this version of the Ganeti Debian packages"
 	echo "                  If unset, it will just use the latest version available"
 	echo "-l [path]         Base directory for logging (default: /var/log/ganeti-cluster-testing)"
+	echo "-b		Build-only mode - do not run any QA tests, just set up the cluster"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd_file_sharedfile-bridged"
@@ -154,11 +156,14 @@ runQaScript() {
     return $qaScriptReturnCode
 }
 
-while getopts "hc:f:r:g:" opt; do
+while getopts "hbc:f:r:g:" opt; do
 	case $opt in
 		h)
 			usage
 			exit 0
+			;;
+		b)
+			MODE="buildonly"
 			;;
 		c)
 			CLUSTERTYPE=$OPTARG
@@ -206,6 +211,12 @@ SCRIPT_START_VMS=`date +%s`
 createVms 3
 bootVms 3
 runPlaybook $CLUSTERTYPE
+
+if [ "$MODE" = "buildonly" ]; then
+	echoAndLog "* Finished setting up the cluster. Exiting now as requested (build-only mode)"
+	exit
+fi
+
 SCRIPT_FINISH_VMS=`date +%s`
 SCRIPT_START_QA=`date +%s`
 runQaScript $CLUSTERTYPE
