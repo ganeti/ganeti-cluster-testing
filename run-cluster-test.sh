@@ -133,7 +133,7 @@ bootVms() {
 runPlaybook() {
 	local play=$1
 	echoAndLog "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml -e ganeti_version=${GANETIVERSION} | tee -a "${LOGPATH}ansible-cluster-setup.log"
+	ansible-playbook -i inventory ${play}.yml -e "ganeti_version=${GANETIVERSION} target_release=${OS_RELEASE}" | tee -a "${LOGPATH}ansible-cluster-setup.log"
 	if [ "${PIPESTATUS[0]}" -ne "0" ]; then
 		echoAndLog "* Preparing the VMs/initialising ganeti cluster failed"
 		exit 1
