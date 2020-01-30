@@ -219,6 +219,12 @@ echo "Installing kernel & grub"
 mount --bind /dev/ ${DEBOOTSTRAP_PATH}/dev  &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} mount -t proc none /proc &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} mount -t sysfs none /sys &>> ${LOGFILE}
+cat > ${DEBOOTSTRAP_PATH}/usr/sbin/policy-rc.d << EOF
+#!/bin/sh
+echo "All runlevel operations denied by policy" >&2
+exit 101
+EOF
+chmod 755 ${DEBOOTSTRAP_PATH}/usr/sbin/policy-rc.d
 echo root:root | chroot ${DEBOOTSTRAP_PATH} chpasswd &>> ${LOGFILE}
 LANG=C DEBIAN_FRONTEND=noninteractive chroot ${DEBOOTSTRAP_PATH} apt-get install -y --force-yes -q ${LINUX_KERNEL_PKG} grub-pc &>> ${LOGFILE}
 sed -i "s|^GRUB_CMDLINE_LINUX=.\+|GRUB_CMDLINE_LINUX='net.ifnames=0 biosdevname=0'|" ${DEBOOTSTRAP_PATH}/etc/default/grub &>> ${LOGFILE} 
@@ -229,6 +235,8 @@ chroot ${DEBOOTSTRAP_PATH} apt-get clean &>> ${LOGFILE}
 sed -i "s|/dev/nbd0p2|/dev/vda2|g" ${DEBOOTSTRAP_PATH}/boot/grub/grub.cfg &>> ${LOGFILE}
 grub-install /dev/nbd0 --root-directory=${DEBOOTSTRAP_PATH} --modules="biosdisk part_msdos" &>> ${LOGFILE}
 set +e
+
+rm ${DEBOOTSTRAP_PATH}/usr/sbin/policy-rc.d
 
 echo "Cleaning up"
 cleanup
