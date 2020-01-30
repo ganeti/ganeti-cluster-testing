@@ -8,6 +8,7 @@ OS_RELEASE="stable"
 GANETIVERSION="latest"
 LOGBASE="/var/log/ganeti-cluster-testing/"
 LOGPATH=${LOGBASE}
+MACHINETYPE="q35"
 
 usage() {
 	echo "This script sets up an environment to test different ganeti cluster configurations"
@@ -23,6 +24,7 @@ usage() {
 	echo "                  If unset, it will just use the latest version available"
 	echo "-l [path]         Base directory for logging (default: /var/log/ganeti-cluster-testing)"
 	echo "-b		Build-only mode - do not run any QA tests, just set up the cluster"
+	echo "-p		Switch to legacy 'pc' machine type for QEMU/KVM (default: q35)"
 	echo
 	echo "Currently known cluster types:"
 	echo " kvm-drbd_file_sharedfile-bridged"
@@ -89,7 +91,7 @@ cleanupLock() {
 killVms() {
 	echoAndLog "* Destroying all running VMs (if any)..."
 	echoAndLog
-	for dom in $(virsh --quiet list --all|grep running | awk '{ print $2 }'); do
+	for dom in $(virsh --quiet list --all|grep -E "(running|shut off)" | awk '{ print $2 }'); do
 		virsh destroy "${dom}"
 	done
 	echoAndLog
@@ -122,7 +124,7 @@ bootVms() {
 	echoAndLog "* Creating / booting VMs"
 	echoAndLog
 	for i in `seq 1 ${numVMs}`; do
-		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template.xml > ${TMPFILE}
+		sed "s/__VM_NAME__/gnt-test0${i}/" vm-template-${MACHINETYPE}.xml > ${TMPFILE}
 		virsh create ${TMPFILE} | tee -a "${LOGPATH}main.log"
 	done
 	rm ${TMPFILE}
@@ -156,7 +158,7 @@ runQaScript() {
     return $qaScriptReturnCode
 }
 
-while getopts "hbc:f:r:g:" opt; do
+while getopts "hbpc:f:r:g:" opt; do
 	case $opt in
 		h)
 			usage
@@ -176,6 +178,9 @@ while getopts "hbc:f:r:g:" opt; do
 			;;
 		g)
 			GANETIVERSION=$OPTARG
+			;;
+		p)
+			MACHINETYPE="pc"
 			;;
 	esac
 done
