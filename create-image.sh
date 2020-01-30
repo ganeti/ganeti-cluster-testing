@@ -37,6 +37,7 @@ usage() {
 
 cleanup() {
 	# the great cleanup
+	set -e
 	chroot ${DEBOOTSTRAP_PATH} umount /proc/ /sys/ /dev/
 	sleep 1
 	umount ${DEBOOTSTRAP_PATH}
