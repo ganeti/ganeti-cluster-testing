@@ -214,8 +214,10 @@ if ! [ "${AUTHORIZED_KEY}" = "false" ]; then
 fi
 
 
-# install grub
 set -e
+# speed up dpkg (disable fsync)
+echo "force-unsafe-io" > ${DEBOOTSTRAP_PATH}/etc/dpkg/dpkg.cfg.d/02dpkg-unsafe
+# install grub
 echo "Installing kernel & grub"
 mount --bind /dev/ ${DEBOOTSTRAP_PATH}/dev  &>> ${LOGFILE}
 chroot ${DEBOOTSTRAP_PATH} mount -t proc none /proc &>> ${LOGFILE}
