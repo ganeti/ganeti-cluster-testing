@@ -5,6 +5,7 @@ MODE="run_and_build"
 CLUSTERTYPE=""
 OS_FLAVOR="debian"
 OS_RELEASE="stable"
+ANSIBLE_PYTHON_INTERPRETER="/usr/bin/python3"
 GANETIVERSION="latest"
 LOGBASE="/var/log/ganeti-cluster-testing/"
 LOGPATH=${LOGBASE}
@@ -135,7 +136,7 @@ bootVms() {
 runPlaybook() {
 	local play=$1
 	echoAndLog "* Prepare VMs/initialise ganeti cluster"
-	ansible-playbook -i inventory ${play}.yml -e "ganeti_version=${GANETIVERSION} target_release=${OS_RELEASE}" | tee -a "${LOGPATH}ansible-cluster-setup.log"
+	ansible-playbook -i inventory ${play}.yml -e "ganeti_version=${GANETIVERSION} target_release=${OS_RELEASE} ansible_python_interpreter=${ANSIBLE_PYTHON_INTERPRETER}" | tee -a "${LOGPATH}ansible-cluster-setup.log"
 	if [ "${PIPESTATUS[0]}" -ne "0" ]; then
 		echoAndLog "* Preparing the VMs/initialising ganeti cluster failed"
 		exit 1
@@ -199,6 +200,16 @@ case $CLUSTERTYPE in
 	*)
 		echo "Unknown/unsupported cluster type '${CLUSTERTYPE}'"
 		exit 1
+		;;
+esac
+
+# use legacy ansible interpreter on older releases
+case "$OS_RELEASE" in
+	jessie|stretch|buster)
+		ANSIBLE_PYTHON_INTERPRETER="/usr/bin/python"
+		;;
+	bionic|cosmic|disco|eoan)
+		ANSIBLE_PYTHON_INTERPRETER="/usr/bin/python"
 		;;
 esac
 

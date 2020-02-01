@@ -9,7 +9,7 @@ QCOW_IMG_SIZE=2G
 FORCE_OVERWRITE=false
 AUTHORIZED_KEY=false
 DEB_MIRROR="127.0.0.1:3142"
-DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,wget,ca-certificates,ifupdown,python,python3,haveged"
+DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,wget,ca-certificates,ifupdown,python3,haveged"
 NET_IP=dhcp
 LOGBASE="/tmp"
 
@@ -123,6 +123,16 @@ case "$FLAVOR" in
 	*)
 		echo "Error: currently only ubuntu and debian flavors are supported!"
 		exit 1
+esac
+
+# install Python 2 packages on older debian/ubuntu releases
+case "$RELEASE" in
+	jessie|stretch|buster)
+		DEFAULT_PACKAGES="${DEFAULT_PACKAGES},python"
+		;;
+	bionic|cosmic|disco|eoan)
+		DEFAULT_PACKAGES="${DEFAULT_PACKAGES},python"
+		;;
 esac
 
 # preperations
