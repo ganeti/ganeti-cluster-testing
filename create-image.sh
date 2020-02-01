@@ -9,7 +9,7 @@ QCOW_IMG_SIZE=2G
 FORCE_OVERWRITE=false
 AUTHORIZED_KEY=false
 DEB_MIRROR="127.0.0.1:3142"
-DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,wget,ca-certificates,ifupdown,python3,haveged"
+DEFAULT_PACKAGES="less,vim,sudo,openssh-server,acpid,man-db,curl,wget,ca-certificates,ifupdown,python3,haveged,gnupg,iptables"
 NET_IP=dhcp
 LOGBASE="/tmp"
 
