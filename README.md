@@ -1,7 +1,7 @@
 # Ganeti Test Environment
 
 These scripts and Ansible playbooks/roles allow you to setup a N-node Ganeti cluster for testing purposes. It uses libvirt/KVM as a virtualisiation layer, qemu-utils, debootstrap and apt-cacher-ng to setup VMs and Ansible to provision different kinds of Ganeti clusters. As of now it supports creating these cluster types:
-- DRBD disks, bridged networking, fully virtualised KVM instances (e.g. running their own kernel)
+- DRBD/plain/sharedfile disks, bridged networking, fully virtualised KVM instances (e.g. running their own kernel)
 
 ## How to use
 
@@ -24,7 +24,7 @@ If you want to create a new flavor of ganeti cluster setup (e.g. using a central
 
 ## How fast is this?
 
-It takes about 10 minutes to create the required VMs and setup a three-node Ganeti cluster with DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). The QA suite needs another ~90 minutes as of now.
+It takes about 10 minutes to create the required VMs and setup a three-node Ganeti cluster with sharedfile (via NFS)/DRBD/KVM configured (but no instances) on an older Dell R610 with spinning disks (10k SAS RAID1). The QA suite needs another ~90 minutes as of now.
 
 ## TODOs
 
@@ -40,11 +40,10 @@ It takes about 10 minutes to create the required VMs and setup a three-node Gane
 ### Missing / New Features
 - [*done*] build Ganeti test suite to run actual tests (check the ganeti repository, there's something already there)
 - [*done*] find a way to capture/save/provide the output/results of the build/test process (Update: logs are stored locally and output is also conserved through Gitlab runner)
-- find a way to provision operating systems on instances in the currently existing DRBD cluster scenario for actual tests
+- [*done*] find a way to provision operating systems on instances in the currently existing DRBD cluster scenario for actual tests (Update: for now it is just a busybox initramfs which reacts to ACPI shutdown requests)
 
 ### Playbook ideas for other cluster types:
-- DRBD disks with different variants of networking and/or different OS providers
-- flatfile / shared file clusters
+- different types of networking (vlan-aware bridges, openvswitch etc.)
 - other hypervisors (as long as they are usable within KVM)
 - you name it
 
@@ -55,6 +54,5 @@ Following is a list of tests from the ganeti QA testsuite which currently fail (
 - alternative SSH port: the tests run a few iptables commands to "fake" SSH running on a different port. something with these tests fails and needs to be investigated. Probably related to the current test environment and not to the test itself.
 - instance export: needs more space on the root FS
 - instance reinstall: does not work with the noop OS provider
-- disk template 'plain': complains about to few spindles/PVs(?). need to understand how plain is exactly supposed to work and prepare/alter the test environment accordingly
 - instance-remove-drbd-offline: test fails while setting the node back online. The command `gnt-node modify --offline no gnt-test02` comes back with an interactive question and suggests using --readd instead.
 - renew-crypto: it generates new DSA keys and is not able to login with those afterwards. This needs to be changed to a newer key type
