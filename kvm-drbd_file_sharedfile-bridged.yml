@@ -34,3 +34,5 @@
       command: gnt-node add --no-ssh-key-check gnt-test02
     - name: Add node
       command: gnt-node add --no-ssh-key-check gnt-test03
+    - name: Set valid XEN hypervisor parameters (the QA suite will fail with the default parameters)
+      command: "gnt-cluster modify --hypervisor-parameters xen-pvm:kernel_path={{ ansible_cmdline.BOOT_IMAGE }},initrd_path=/boot/ganeti_busybox_initrd,kernel_args=init=/init"
