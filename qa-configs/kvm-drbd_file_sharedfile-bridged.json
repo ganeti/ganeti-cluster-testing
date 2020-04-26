@@ -115,7 +115,7 @@
     "cluster-rename": false,
     "cluster-reserved-lvs": true,
     "# this enables a bunch of tests, but the 'user-shutdown' test seems to be broken": null,
-    "cluster-modify": false,
+    "cluster-modify": true,
     "cluster-oob": true,
     "cluster-instance-communication": true,
     "cluster-epo": true,
