@@ -66,6 +66,9 @@
     },
     {
       "name": "kvm-test-instance02"
+    },
+    {
+      "name": "kvm-test-instance03"
     }
   ],
 
