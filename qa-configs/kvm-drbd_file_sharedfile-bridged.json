@@ -14,6 +14,10 @@
   "maxmem": "768M",
   "minmem": "256M",
 
+  "enabled-hypervisors": [
+    "kvm"
+  ],
+
   "enabled-disk-templates": [
     "plain",
     "drbd",
