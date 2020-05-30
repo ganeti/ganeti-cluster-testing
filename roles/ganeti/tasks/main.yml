@@ -1,14 +1,14 @@
 ---
 - name: Install ganeti nightly repository key
   apt_key:
-    url: https://rbott-guest.pages.debian.net/ganeti-build/ganeti-nightly-builds.asc
+    url: https://rbott.pages.debian.net/ganeti-build/ganeti-nightly-builds.asc
     state: present
   when:
     - ganeti_version == "nightly"
 
 - name: Install ganeti nightly repository
   apt_repository:
-    repo: "deb https://rbott-guest.pages.debian.net/ganeti-build {{ target_release }} main"
+    repo: "deb https://rbott.pages.debian.net/ganeti-build {{ target_release }} main"
     state: present
     update_cache: yes
   when:
