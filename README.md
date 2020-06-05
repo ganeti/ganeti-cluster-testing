@@ -18,6 +18,8 @@ These scripts and Ansible playbooks/roles allow you to setup a N-node Ganeti clu
   - ansible
 - run the bash script to kick off the build process: `run-cluster-test.sh -c [your-cluster-scenario] -r [debian-release-name] -g [ganeti-version]` This will create the required VMs, boot them and also kick of the Ansible playbook (named your-cluster-scenario.yml) to do the final setup and initialise the Ganeti cluster, add nodes etc. The `-r` and `-g` parameters are optional and default to `stable` and `latest-in-the-archives` respectively.
 
+Please refer to [this manual](CREATE_NEW_RECIPE.md) to learn how to create your own recipes/testing scenarios.
+
 ## How to extend
 
 If you want to create a new flavor of ganeti cluster setup (e.g. using a central shared storage or glusterfs) write a playbook, name it accordingly and extend the `run-cluster-test.sh` to support your new playbook (e.g. extend the usage() function, set the number of required VMs etc.). The current logic allows to create up to nine VMs (named gnt-test01...gnt-test09 with ip addresses 192.168.122.11..19). DNS resolution (via `/etc/hosts`) for inter-vm communication will be set up and an SSH public key will be added to allow for easy access from the management host.
