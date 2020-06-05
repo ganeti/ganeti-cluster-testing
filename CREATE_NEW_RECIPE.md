@@ -12,7 +12,7 @@ A recipe describes the whole test scenario and is distributed over several files
 
 ### inventory
 
-This folder belongs to Ansible and lists the available Ganeti test VMs. Currently we run all tests on three VMs which are reachable on the internal network as 192.168.122.11 - .13.
+This file belongs to Ansible and lists the available Ganeti test VMs. Currently we run all tests on three VMs which are reachable on the internal network as 192.168.122.11 - .13.
 
 ### roles
 
