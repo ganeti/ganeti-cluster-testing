@@ -182,7 +182,7 @@
     "instance-shutdown": true,
     "# this fails because it tries to add/remove disks during instance runtime": null,
     "instance-device-names": false,
-    "instance-device-hotplug": false,
+    "instance-device-hotplug": true,
     "instance-user-down": false,
     "instance-communication": false,
 
