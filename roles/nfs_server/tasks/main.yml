@@ -15,7 +15,7 @@
 - name: Export shared-file-storage folder
   lineinfile:
     path: /etc/exports
-    line: "/srv/ganeti/shared-file-storage  192.168.122.0/24(rw,no_root_squash)"
+    line: "/srv/ganeti/shared-file-storage  192.168.1.0/24(rw,no_root_squash)"
 
 - name: Restart NFS server
   service:

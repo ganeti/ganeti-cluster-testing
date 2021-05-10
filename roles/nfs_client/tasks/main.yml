@@ -14,6 +14,6 @@
 - name: mount nfs share
   mount:
     path: /srv/ganeti/shared-file-storage
-    src: "192.168.122.11:/srv/ganeti/shared-file-storage"
+    src: "{{ groups["master_node"][0] }}:/srv/ganeti/shared-file-storage"
     fstype: nfs
     state: mounted
