@@ -7,12 +7,12 @@
     - name: Wait for SSH
       local_action: "wait_for port=22 host={{ inventory_hostname }}"
 
-- hosts: 192.168.122.11
+- hosts: master_node
   user: root
   roles:
     - nfs_server
 
-- hosts: ganeti_nodes:!192.168.122.11
+- hosts: non_master_nodes
   user: root
   roles:
     - nfs_client
@@ -25,7 +25,7 @@
     - drbd
     - ganeti
 
-- hosts: 192.168.122.11
+- hosts: master_nodes
   user: root
   tasks:
     - name: Initialise cluster
