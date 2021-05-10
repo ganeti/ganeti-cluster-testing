@@ -46,19 +46,16 @@
     path: /etc/hosts
     line: "{{ item }}"
   with_items:
-    - "192.168.122.11   gnt-test01"
-    - "192.168.122.12   gnt-test02"
-    - "192.168.122.13   gnt-test03"
-    - "192.168.122.21   kvm-test-instance01"
-    - "192.168.122.22   kvm-test-instance02"
-    - "192.168.122.23   kvm-test-instance03"
-    - "192.168.122.24   kvm-test-instance04"
-    - "192.168.122.25   kvm-test-instance05"
+    - "192.168.1.251   kvm-test-instance01"
+    - "192.168.1.252   kvm-test-instance02"
+    - "192.168.1.253   kvm-test-instance03"
+    - "192.168.1.254   kvm-test-instance04"
+    - "192.168.1.255   kvm-test-instance05"
 
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:
     path: /etc/hosts
-    line: "192.168.122.254   staging-cluster.ganeti.org"
+    line: "192.168.1.199   staging-cluster.ganeti.org"
 
 - name: Create /root/.ssh directory
   file:
