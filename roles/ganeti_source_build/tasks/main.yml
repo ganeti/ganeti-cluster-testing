@@ -8,15 +8,11 @@
 - name: Install Ganeti general build dependencies
   apt:
     name:
-      - automake
       - drbd-utils
       - fping
-      - git
       - iproute2
       - iputils-arping
       - lvm2
-      - m4
-      - make
       - qemu-kvm
       - qemu-utils
       - socat
