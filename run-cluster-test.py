@@ -406,16 +406,20 @@ def main():
             print("done.")
 
         inventory_file = store_inventory(instances)
-
-        subprocess.run([
+        cmd = [
             "ansible-playbook",
             "-u",
             "root",
             "-i",
             inventory_file,
             "-e",
-            "\"ganeti_source=%s ganeti_branch=%s\"" % (args.source, args.branch),
-            "%s.yml" % args.recipe], check=True)
+            "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch),
+            "%s.yml" % args.recipe
+        ]
+
+        print("Running '%s'" % " ".join(cmd))
+
+        subprocess.run(cmd, check=True)
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
