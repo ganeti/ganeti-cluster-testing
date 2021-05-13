@@ -1,0 +1,104 @@
+---
+
+- name: Install Ganeti general build dependencies
+  apt:
+    name:
+      - drbd-utils
+      - fping
+      - iproute
+      - iputils-arping
+      - lvm2
+      - m4
+      - make
+      - qemu-kvm
+      - qemu-utils
+      - socat
+      - ssh
+
+- name: Install Ganeti Python build dependencies
+  apt:
+    name:
+      - python3
+      - python3-bitarray
+      - python3-openssl
+      - python3-paramiko
+      - python3-psutil
+      - python3-pycurl
+      - python3-pyinotify
+      - python3-pyparsing
+      - python3-simplejson
+    state: present
+
+- name: Install Ganeti Haskell build dependencies
+  apt:
+    name:
+      - cabal-install
+      - ghc
+      - ghc-ghci
+      - libghc-attoparsec-dev
+      - libghc-base64-bytestring-dev
+      - libghc-case-insensitive-dev
+      - libghc-cryptonite-dev
+      - libghc-curl-dev
+      - libghc-deepseq-dev
+      - libghc-hinotify-dev
+      - libghc-hslogger-dev
+      - libghc-json-dev
+      - libghc-lens-dev
+      - libghc-lifted-base-dev
+      - libghc-lifted-base-dev
+      - libghc-network-dev
+      - libghc-old-time-dev
+      - libghc-old-time-dev
+      - libghc-parallel-dev
+      - libghc-regex-pcre-dev
+      - libghc-temporary-dev
+      - libghc-temporary-dev
+      - libghc-test-framework-hunit-dev
+      - libghc-test-framework-quickcheck2-dev
+      - libghc-text-dev
+      - libghc-utf8-string-dev
+      - libghc-vector-dev
+      - libghc-zlib-dev
+      - libpcre3-dev
+    state: present
+
+- name: Checkout Ganeti repository
+  git:
+    repo: "https://github.com/{{ ganeti_source }}"
+    dest: /usr/src/ganeti
+    version: "{{ ganeti_branch }}"
+    depth: 1
+
+- name: Run autogen.sh
+  command:
+    cmd: autogen.sh
+    chdir: /usr/src/ganeti
+    creates: /usr/src/ganeti/Makefile.in
+
+- name: Run configure
+  command:
+    cmd: "configure --localstatedir=/var --sysconfdir=/etc --enable-symlinks"
+    chdir: /usr/src/ganeti
+
+- name: Run make
+  command:
+    cmd: make -j 2
+    chdir: /usr/src/ganeti
+
+- name: Create required directories
+  file:
+    path: "{{ item }}
+    state: directory
+  with_items:
+    - /etc/ganeti
+    - /var/lib/ganeti
+    - /var/log/ganeti
+    - /srv/ganeti
+    - /srv/ganeti/os
+    - /srv/ganeti/export
+
+- name: Run make install
+  command:
+    cmd: make install
+    chdir: /usr/src/ganeti

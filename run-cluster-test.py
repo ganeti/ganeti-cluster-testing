@@ -370,6 +370,7 @@ def main():
     parser = argparse.ArgumentParser(description="Manage Ganeti Cluster testing environments")
     parser.add_argument('mode', choices=["remove-tests", "run-test", "list-tests"])
     parser.add_argument('--source', default="ganeti/ganeti")
+    parser.add_argument('--branch', default="master")
     parser.add_argument('--os-version', default=None)
     parser.add_argument('--recipe', default=None)
     parser.add_argument('--tag', default=None)
@@ -413,7 +414,7 @@ def main():
             "-i",
             inventory_file,
             "-e",
-            "\"ganeti_source=%s\"" % args.source,
+            "\"ganeti_source=%s ganeti_branch=%s\"" % (args.source, args.branch),
             "%s.yml" % args.recipe], check=True)
 
     elif args.mode == "remove-tests":
