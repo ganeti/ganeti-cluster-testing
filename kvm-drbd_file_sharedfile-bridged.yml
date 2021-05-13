@@ -31,7 +31,7 @@
     - drbd
 #    - ganeti
 
-- hosts: master_nodes
+- hosts: master_node
   user: root
   tasks:
     - name: Initialise cluster
