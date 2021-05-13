@@ -5,6 +5,7 @@
     name:
       - drbd-utils
       - fping
+      - git
       - iproute2
       - iputils-arping
       - lvm2
