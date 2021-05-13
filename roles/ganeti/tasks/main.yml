@@ -1,98 +1,15 @@
 ---
-- name: Install ganeti nightly repository key
-  apt_key:
-    url: https://rbott-guest.pages.debian.net/ganeti-build/ganeti-nightly-builds.asc
-    state: present
-  when:
-    - ganeti_version == "nightly"
-
-- name: Install ganeti nightly repository
-  apt_repository:
-    repo: "deb https://rbott-guest.pages.debian.net/ganeti-build {{ target_release }} main"
-    state: present
-    update_cache: yes
-  when:
-    - ganeti_version == "nightly"
-
-- name: Install required packages (latest packages available)
-  apt:
-    name: 
-      - vlan
-      - bridge-utils
-      - qemu-kvm
-      - ganeti
-      - ganeti-instance-debootstrap
-      - ganeti-os-noop
-      - ganeti-testsuite
-  when:
-    - ganeti_version == "latest" or ganeti_version == "nightly"
-
-- name: Install required packages (with a specific version)
-  apt:
-    name:
-      - vlan
-      - bridge-utils
-      - drbd-utils
-      - qemu-kvm
-      - "ganeti={{ ganeti_version }}"
-      - ganeti-instance-debootstrap
-      - ganeti-os-noop
-      - "ganeti-testsuite={{ ganeti_version }}"
-  when:
-    - ganeti_version != "latest" and ganeti_version != "nightly"
-
-- name: Make sure cluster node names are present in /etc/hosts
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ item }}"
-  with_items:
-    - "192.168.1.251   kvm-test-instance01"
-    - "192.168.1.252   kvm-test-instance02"
-    - "192.168.1.253   kvm-test-instance03"
-    - "192.168.1.254   kvm-test-instance04"
-    - "192.168.1.255   kvm-test-instance05"
+#- name: Install required packages (latest packages available)
+#  apt:
+#    name:
+#      - ganeti-instance-debootstrap
+#      - ganeti-os-noop
+#      - ganeti-testsuite
 
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:
     path: /etc/hosts
     line: "192.168.1.199   staging-cluster.ganeti.org"
-
-- name: Create /root/.ssh directory
-  file:
-    path: /root/.ssh
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Install SSH private key for cluster authentication
-  copy:
-    src: ssh_private_key
-    dest: /root/.ssh/id_ed25519
-    owner: root
-    group: root
-    mode: "0600"
-
-- name: Install SSH public key for cluster authentication
-  lineinfile:
-    path: /root/.ssh/authorized_keys
-    line: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH6OrYNU4hxmcRY7N/a5+GI64BO1jYXdtoUn0E4V/4XE ganeti-staging-tests"
-
-- name: Install SSH client config for cluster communication
-  copy:
-    src: ssh_config
-    dest: /root/.ssh/config
-    owner: root
-    group: root
-    mode: "0640"
-
-- name: Install ganeti-instance-debootstrap default config file
-  copy:
-    src: debootstrap-default.conf
-    dest: /etc/ganeti/instance-debootstrap/variants/default.conf
-    owner: root
-    group: root
-    mode: "0644"
 
 - name: Install ganeti rapi users file (1/2)
   file:
@@ -109,15 +26,6 @@
     owner: root
     group: root
     mode: "0644"
-
-- name: Configure RAPI daemon to listen on any port
-  lineinfile:
-    path: /etc/default/ganeti
-    line: 'RAPI_ARGS="--require-authentication"'
-    regexp: '^RAPI_ARGS'
-    state: present
-  notify:
-    - Restart ganeti
 
 - name: Create file storage path
   file:

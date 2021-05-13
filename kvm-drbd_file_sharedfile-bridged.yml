@@ -29,7 +29,7 @@
     - storage
     - bridge_networking
     - drbd
-#    - ganeti
+    - ganeti
 
 - hosts: master_node
   user: root
