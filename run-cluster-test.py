@@ -301,15 +301,15 @@ def create_instance(name, os_type, tag):
             'memory': "2G",
             'minmem': "2G",
             'maxmem': "2G",
-            'vcpus': 2,
+            'vcpus': 4,
         },
         'disk_template': "plain",
         'disks': [
             {
-                'size': "5G"
+                'size': "10G"
             },
             {
-                'size': "40G"
+                'size': "15G"
             }
         ],
         'nics': [

@@ -86,7 +86,7 @@
 
 - name: Run make
   command:
-    cmd: make -j 2
+    cmd: make -j 4
     chdir: /usr/src/ganeti
 
 - name: Create required directories
