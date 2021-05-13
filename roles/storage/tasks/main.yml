@@ -7,7 +7,7 @@
 
 - name: Create physical volume / volume group for ganeti
   lvg:
-    pvs: /dev/vda3
+    pvs: /dev/vdb
     vg: gnt
     state: present
 

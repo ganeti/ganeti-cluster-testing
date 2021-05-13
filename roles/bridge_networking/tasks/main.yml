@@ -1,4 +1,9 @@
 ---
+- name: Install bridge-utils
+  apt:
+    name: bridge-utils
+    state: present
+
 - name: Configure network bridge
   template:
     src: interfaces.j2
