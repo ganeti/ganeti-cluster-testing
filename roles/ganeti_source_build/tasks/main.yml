@@ -88,7 +88,7 @@
 
 - name: Run configure
   command:
-    cmd: "sh configure --with-haskell-flags='-optl -Wl,-z,relro -optl -Wl,--as-needed' --enable-restricted-commands --prefix=/usr --localstatedir=/var --sysconfdir=/etc --disable-symlinks  --with-ssh-initscript=/usr/sbin/invoke-rc.d ssh' --with-iallocator-search-path=/usr/local/lib/ganeti/iallocators,/usr/lib/ganeti/iallocators --with-os-search-path=/srv/ganeti/os,/usr/local/lib/ganeti/os,/usr/lib/ganeti/os,/usr/share/ganeti/os"
+    cmd: "sh configure --with-haskell-flags='-optl -Wl,-z,relro -optl -Wl,--as-needed' --enable-restricted-commands --prefix=/usr --localstatedir=/var --sysconfdir=/etc --disable-symlinks  --with-ssh-initscript='/usr/sbin/invoke-rc.d ssh' --with-iallocator-search-path=/usr/local/lib/ganeti/iallocators,/usr/lib/ganeti/iallocators --with-os-search-path=/srv/ganeti/os,/usr/local/lib/ganeti/os,/usr/lib/ganeti/os,/usr/share/ganeti/os"
     chdir: /usr/src/ganeti
 
 - name: Run make
