@@ -1,8 +1,14 @@
 ---
 
+- name: Configure/Enable en_US.UTF-8 locale
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
+
 - name: Install Ganeti general build dependencies
   apt:
     name:
+      - automake
       - drbd-utils
       - fping
       - git
@@ -73,13 +79,13 @@
 
 - name: Run autogen.sh
   command:
-    cmd: autogen.sh
+    cmd: "sh autogen.sh"
     chdir: /usr/src/ganeti
     creates: /usr/src/ganeti/Makefile.in
 
 - name: Run configure
   command:
-    cmd: "configure --localstatedir=/var --sysconfdir=/etc --enable-symlinks"
+    cmd: "sh configure --localstatedir=/var --sysconfdir=/etc --enable-symlinks"
     chdir: /usr/src/ganeti
 
 - name: Run make
