@@ -36,7 +36,6 @@
   tasks:
     - name: Initialise cluster
       command: gnt-cluster init --vg-name gnt --master-netdev eth0 --master-netmask 24 --enabled-hypervisors kvm --nic-parameters mode=bridged,link=virt-bridge --enabled-disk-templates=plain,file,drbd,sharedfile --shared-file-storage-dir=/srv/ganeti/shared-file-storage --file-storage-dir=/srv/ganeti/file-storage --default-iallocator hail --hypervisor-parameters kvm:spice_bind=0.0.0.0,spice_use_tls=true,kernel_path=/vmlinuz,initrd_path=/boot/ganeti_busybox_initrd,kernel_args=init=/init --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB --ipolicy-disk-templates=plain,file,drbd,sharedfile staging-cluster.ganeti.org
-    - name: Add node
-      command: gnt-node add --no-ssh-key-check gnt-test02
-    - name: Add node
-      command: gnt-node add --no-ssh-key-check gnt-test03
+    - name: Add nodes
+      command: "gnt-node add --no-ssh-key-check {{ item }}"
+      with_items: "{{ groups['non_master_nodes'] }}"
