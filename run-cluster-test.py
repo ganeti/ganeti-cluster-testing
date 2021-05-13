@@ -309,7 +309,7 @@ def create_instance(name, os_type, tag):
                 'size': "10G"
             },
             {
-                'size': "15G"
+                'size': "22G"
             }
         ],
         'nics': [
