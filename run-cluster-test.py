@@ -279,6 +279,48 @@ non_master_nodes
     return temp_file.name
 
 
+def scp_file(source_path, dest_path, target_host):
+    cmd = [
+        "/usr/bin/scp",
+        source_path,
+        "root@%s:%s" % (target_host, dest_path)
+    ]
+
+    print("Running '%s'" % " ".join(cmd))
+
+    subprocess.run(cmd, check=True)
+
+
+def run_remote_cmd(command, target_host):
+    cmd = [
+        "/usr/bin/ssh",
+        "root@%s" % target_host,
+        command
+    ]
+
+    print("Running '%s'" % " ".join(cmd))
+
+    subprocess.run(cmd, capture_output=True, check=True)
+
+
+def run_ansible_playbook(inventory_file, extra_vars, recipe):
+
+    cmd = [
+        "ansible-playbook",
+        "-u",
+        "root",
+        "-i",
+        inventory_file,
+        "-e",
+        extra_vars,
+        "%s.yml" % recipe
+    ]
+
+    print("Running '%s'" % " ".join(cmd))
+
+    subprocess.run(cmd, check=True)
+
+
 def init_rapi():
     return rapi.GanetiRapiClient("localhost", port=5080, username="rapi", password="gnt-build-setup")
 
@@ -406,20 +448,14 @@ def main():
             print("done.")
 
         inventory_file = store_inventory(instances)
-        cmd = [
-            "ansible-playbook",
-            "-u",
-            "root",
-            "-i",
-            inventory_file,
-            "-e",
-            "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch),
-            "%s.yml" % args.recipe
-        ]
+        extra_vars = "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch)
+        run_ansible_playbook(inventory_file, extra_vars, args.recipe)
 
-        print("Running '%s'" % " ".join(cmd))
+        src_file = "qa-configs/%s.json" % args.recipe
+        scp_file(src_file, "/tmp/recipe.json", instances[0])
 
-        subprocess.run(cmd, check=True)
+        qa_command = "export PYTHONPATH=\"/usr/src/ganeti/qa:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; ./ganeti-qa.py --yes-do-it /tmp/recipe.json"
+        run_remote_cmd(qa_command, instances[0])
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
