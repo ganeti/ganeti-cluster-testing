@@ -454,7 +454,7 @@ def main():
         src_file = "qa-configs/%s.json" % args.recipe
         scp_file(src_file, "/tmp/recipe.json", instances[0])
 
-        qa_command = "export PYTHONPATH=\"/usr/src/ganeti/qa:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; ./ganeti-qa.py --yes-do-it /tmp/recipe.json"
+        qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; ./ganeti-qa.py --yes-do-it /tmp/recipe.json"
         run_remote_cmd(qa_command, instances[0])
 
     elif args.mode == "remove-tests":
