@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import os
+import socket
 import subprocess
 import sys
 
@@ -268,7 +269,8 @@ def store_recipe(recipe_name, nodes):
     node_list = []
     for node in nodes:
         node_list.append({
-            "primary": node
+            "primary": node,
+            "secondary": socket.gethostbyname(node)
         })
 
     recipe["nodes"] = node_list
