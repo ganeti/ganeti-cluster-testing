@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import json
 import os
 import subprocess
 import sys
@@ -257,6 +258,26 @@ def generate_instance_names(amount):
     return names
 
 
+def store_recipe(recipe_name, nodes):
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+    qa_file_name = "qa-configs/%s.json" % recipe_name
+    with open(qa_file_name) as f:
+        recipe = json.load(f)
+
+    node_list = []
+    for node in nodes:
+        node_list.append({
+            "primary": node
+        })
+
+    recipe["nodes"] = node_list
+
+    json.dump(recipe, temp_file)
+
+    return temp_file.name
+
+
 def store_inventory(names):
     temp_file = tempfile.NamedTemporaryFile(delete=False)
 
@@ -451,7 +472,7 @@ def main():
         extra_vars = "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch)
         run_ansible_playbook(inventory_file, extra_vars, args.recipe)
 
-        src_file = "qa-configs/%s.json" % args.recipe
+        src_file = store_recipe(args.recipe, instances)
         scp_file(src_file, "/tmp/recipe.json", instances[0])
 
         qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; ./ganeti-qa.py --yes-do-it /tmp/recipe.json"
