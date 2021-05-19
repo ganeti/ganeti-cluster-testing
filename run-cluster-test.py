@@ -321,7 +321,9 @@ def run_remote_cmd(command, target_host):
 
     print("Running '%s'" % " ".join(cmd))
 
-    subprocess.run(cmd, capture_output=True, check=True)
+    p = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(p.stdout.readline, b''):
+        print(line)
 
 
 def run_ansible_playbook(inventory_file, extra_vars, recipe):
