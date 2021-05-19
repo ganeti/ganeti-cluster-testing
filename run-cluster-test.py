@@ -259,7 +259,7 @@ def generate_instance_names(amount):
 
 
 def store_recipe(recipe_name, nodes):
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_file = tempfile.NamedTemporaryFile(delete=False, mode="w")
 
     qa_file_name = "qa-configs/%s.json" % recipe_name
     with open(qa_file_name) as f:
