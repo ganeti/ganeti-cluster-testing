@@ -59,6 +59,14 @@
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/src/ganeti/qa/qa_utils.py"
 
+- name: "QUICKFIX: Install colors.py (missing from Ganeti source)"
+  copy:
+    src: colors.py
+    dest: /usr/src/ganeti/qa/colors.py
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: "QUICKFIX: install these packages to make the kvm-ifup-os script pass the tests in ganeti-testsuite"
   apt:
     name:
