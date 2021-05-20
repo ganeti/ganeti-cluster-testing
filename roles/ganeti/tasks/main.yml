@@ -1,10 +1,9 @@
 ---
-#- name: Install required packages (latest packages available)
-#  apt:
-#    name:
-#      - ganeti-instance-debootstrap
-#      - ganeti-os-noop
-#      - ganeti-testsuite
+- name: Install required packages
+  apt:
+    name:
+      - ganeti-instance-debootstrap
+      - ganeti-os-noop
 
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:
