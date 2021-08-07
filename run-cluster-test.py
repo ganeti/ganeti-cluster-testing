@@ -406,6 +406,10 @@ def remove_instances_by_tag(tag):
     for data in result["data"]:
         if tag in data[1][1]:
             instance = data[0][1]
+            job_id = client.ShutdownInstance(instance, timeout=0)
+            if not client.WaitForJobCompletion(job_id, period=1):
+                job = client.GetJobStatus(job_id)
+                raise Exception("Failed to shutdown instance %s: %s" % (instance, job["opresult"]))
             job_id = client.DeleteInstance(instance)
             if not client.WaitForJobCompletion(job_id, period=1):
                 job = client.GetJobStatus(job_id)
