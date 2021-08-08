@@ -58,10 +58,10 @@
 
   "instances": [
     {
-      "name": "kvm-test-instance01"
+      "name": "kvm-test-instance01.staging.ganeti.org"
     },
     {
-      "name": "kvm-test-instance02"
+      "name": "kvm-test-instance02.staging.ganeti.org"
     }
   ],
 
