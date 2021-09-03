@@ -364,9 +364,9 @@ def create_instance(name, os_type, tag):
     params = {
         '__version__': 1,
         'beparams': {
-            'memory': "2G",
-            'minmem': "2G",
-            'maxmem': "2G",
+            'memory': "6G",
+            'minmem': "6G",
+            'maxmem': "6G",
             'vcpus': 4,
         },
         'disk_template': "plain",
