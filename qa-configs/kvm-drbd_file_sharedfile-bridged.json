@@ -114,7 +114,7 @@
     "cluster-epo": true,
     "cluster-redist-conf": true,
     "cluster-repair-disk-sizes": true,
-    "cluster-exclusive-storage": true,
+    "cluster-exclusive-storage": false,
     "cluster-instance-policy": true,
     "cluster-upgrade": false,
 
@@ -126,7 +126,7 @@
     "# iptables stuff for SSH port redirects (to fake a non-standard SSH port) seem to fail at some point. not sure yet why.": null,
     "group-custom-ssh-port": false,
 
-    "network": false,
+    "network": true,
 
     "node-list": true,
     "node-info": true,
@@ -144,16 +144,16 @@
     "# This test needs at least two nodes": null,
     "node-failover": true,
 
-    "instance-add-plain-disk": false,
+    "instance-add-plain-disk": true,
     "instance-add-file": true,
     "instance-add-shared-file": true,
     "instance-add-drbd-disk": true,
-    "instance-add-diskless": false,
+    "instance-add-diskless": true,
     "instance-add-rbd": false,
     "instance-add-gluster": false,
     "instance-add-restricted-by-disktemplates": true,
-    "instance-convert-disk": false,
-    "instance-plain-rapi-common-tests": false,
+    "instance-convert-disk": true,
+    "instance-plain-rapi-common-tests": true,
     "# test fails, the command gnt-node modify --offline no gnt-test02 returns with an interactive question, command should use the --readd paramater to avoid that": null,
     "instance-remove-drbd-offline": false,
 
@@ -167,6 +167,7 @@
     "instance-migrate": true,
     "instance-modify": true,
     "instance-modify-primary": true,
+    "# the following fails, not yet investigated": null,
     "instance-modify-disks": false,
     "instance-reboot": true,
     "# we do not yet have an OS provider, so no reinstall possible": null,
@@ -175,7 +176,7 @@
     "instance-shutdown": true,
     "# this fails because it tries to add/remove disks during instance runtime": null,
     "instance-device-names": false,
-    "instance-device-hotplug": false,
+    "instance-device-hotplug": true,
     "instance-user-down": false,
     "instance-communication": false,
 
@@ -203,7 +204,8 @@
     "default-instance-tests": true,
     "exclusive-storage-instance-tests": false,
 
-    "mon-collector": true
+    "# mond not present currently": null,
+    "mon-collector": false
   },
 
   "options": {
