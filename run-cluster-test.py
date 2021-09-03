@@ -4,6 +4,7 @@ import os
 import socket
 import subprocess
 import sys
+import datetime
 
 import client as rapi
 import random
@@ -476,13 +477,23 @@ def main():
 
         inventory_file = store_inventory(instances)
         extra_vars = "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch)
+        playbook_start = datetime.datetime.now()
         run_ansible_playbook(inventory_file, extra_vars, args.recipe)
+        playbook_end = datetime.datetime.now()
 
         src_file = store_recipe(args.recipe, instances)
         scp_file(src_file, "/tmp/recipe.json", instances[0])
 
-        qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; ./ganeti-qa.py --yes-do-it /tmp/recipe.json"
+        qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; python3 -u ganeti-qa.py --yes-do-it /tmp/recipe.json"
+        qa_start = datetime.datetime.now()
         run_remote_cmd(qa_command, instances[0])
+        qa_end = datetime.datetime.now()
+
+        playbook_diff = playbook_end - playbook_start
+        qa_diff = qa_end - qa_start
+
+        print("Setup/Playbook Runtime: {}".format(playbook_diff))
+        print("QA Suite Runtime: {}".format(qa_diff))
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
