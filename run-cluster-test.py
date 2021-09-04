@@ -469,11 +469,13 @@ def main():
     if args.mode == "run-test":
         tag = "%s-%s" % (get_random_adjective(), get_random_instance_name())
         print("Using tag '%s' for this session" % tag)
+        instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
         for instance in instances:
             print("Creating instance %s... " % instance, end="")
             create_instance(instance, args.os_version, tag)
             print("done.")
+        instances_end = datetime.datetime.now()
 
         inventory_file = store_inventory(instances)
         extra_vars = "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch)
@@ -489,11 +491,15 @@ def main():
         run_remote_cmd(qa_command, instances[0])
         qa_end = datetime.datetime.now()
 
+        instances_diff = instances_end - instances_start
         playbook_diff = playbook_end - playbook_start
         qa_diff = qa_end - qa_start
 
+        print("Instance Creation Runtime: {}".format(instances_diff))
         print("Setup/Playbook Runtime: {}".format(playbook_diff))
         print("QA Suite Runtime: {}".format(qa_diff))
+        print("")
+        print("Overall Runtime: {}".format(instances_diff + playbook_diff + qa_diff))
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
