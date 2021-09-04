@@ -444,6 +444,7 @@ def main():
     parser.add_argument('--os-version', default=None)
     parser.add_argument('--recipe', default=None)
     parser.add_argument('--tag', default=None)
+    parser.add_argument('--remove-instances-on-success', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -490,6 +491,12 @@ def main():
         qa_start = datetime.datetime.now()
         run_remote_cmd(qa_command, instances[0])
         qa_end = datetime.datetime.now()
+
+        if args.remove_instances_on_success:
+            print("")
+            print("QA finished successuflly - removing test instances")
+            print("")
+            remove_instances_by_tag(tag)
 
         instances_diff = instances_end - instances_start
         playbook_diff = playbook_end - playbook_start
