@@ -1,0 +1,40 @@
+---
+
+- hosts: ganeti_nodes
+  user: root
+  gather_facts: False
+  tasks:
+    - name: Wait for SSH
+      local_action: "wait_for port=22 host={{ inventory_hostname }}"
+
+- hosts: ganeti_nodes
+  user: root
+  gather_facts: False
+  roles:
+    - ganeti_source_build
+
+- hosts: master_node
+  user: root
+  roles:
+    - nfs_server
+
+- hosts: non_master_nodes
+  user: root
+  roles:
+    - nfs_client
+
+- hosts: ganeti_nodes
+  user: root
+  roles:
+    - storage
+    - drbd
+    - ganeti
+
+- hosts: master_node
+  user: root
+  tasks:
+    - name: Initialise cluster
+      command: "gnt-cluster init --no-ssh-init --vg-name gnt --master-netdev virt-bridge --master-netmask 24 --enabled-hypervisors fake --nic-parameters mode=bridged,link=virt-bridge --enabled-disk-templates=plain,file,drbd,sharedfile --shared-file-storage-dir=/srv/ganeti/shared-file-storage --file-storage-dir=/srv/ganeti/file-storage --default-iallocator hail --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB --ipolicy-disk-templates=plain,file,drbd,sharedfile --disk-parameters drbd:disk-barriers='n',protocol='C',dynamic-resync='true',c-plan-ahead='20',c-min-rate='10240',c-max-rate='1310720',net-custom='--max-buffers=16000 --max-epoch-size=16000' staging-cluster.ganeti.org"
+    - name: Add nodes
+      command: "gnt-node add --no-node-setup --no-ssh-key-check {{ item }}"
+      with_items: "{{ groups['non_master_nodes'] }}"
