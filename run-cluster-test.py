@@ -229,6 +229,10 @@ ADJECTIVES = [
     'zealous',
 ]
 
+CLUSTER_IP_MIN = 240
+CLUSTER_IP_MAX = 254
+
+STATE_FILE = "%s/runs.json" % (os.path.dirname(os.path.realpath(__file__)))
 
 def get_random_adjective():
     return random.choice(ADJECTIVES)
@@ -258,6 +262,32 @@ def generate_instance_names(amount):
                 names.append(fqdn)
                 name_accepted = True
     return names
+
+
+def read_stored_runs():
+    try:
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def store_runs(runs):
+    with open(STATE_FILE, 'w') as f:
+        json.dump(runs, f)
+
+
+def get_cluster_ip():
+    ips_in_use = []
+    for name in runs:
+        ips_in_use.append(runs[name]["cluster-ip"])
+
+    for i in range(CLUSTER_IP_MIN, CLUSTER_IP_MAX):
+        ip = "192.168.1.%s" % (i)
+        if ip not in ips_in_use:
+            return ip
+
+    raise Exception("Error: cannot allocate cluster IP address. Please check runs.json!")
 
 
 def store_recipe(recipe_name, nodes):
@@ -437,6 +467,7 @@ def main():
     global client
     client = init_rapi()
 
+
     parser = argparse.ArgumentParser(description="Manage Ganeti Cluster testing environments")
     parser.add_argument('mode', choices=["remove-tests", "run-test", "list-tests"])
     parser.add_argument('--source', default="ganeti/ganeti")
@@ -466,10 +497,19 @@ def main():
             print("Error: Please specify a valid tag for 'remove-tests' mode")
             sys.exit(1)
 
+    global runs
+    runs = read_stored_runs()
+    cluster_ip = get_cluster_ip()
+
     # operational logic
     if args.mode == "run-test":
         tag = "%s-%s" % (get_random_adjective(), get_random_instance_name())
         print("Using tag '%s' for this session" % tag)
+        runs[tag] = {
+            "cluster-ip": cluster_ip,
+            "type": args.recipe
+        }
+        store_runs(runs)
         instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
         for instance in instances:
@@ -479,7 +519,7 @@ def main():
         instances_end = datetime.datetime.now()
 
         inventory_file = store_inventory(instances)
-        extra_vars = "ganeti_source=%s ganeti_branch=%s" % (args.source, args.branch)
+        extra_vars = "ganeti_source=%s ganeti_branch=%s ganeti_cluster_ip=%s" % (args.source, args.branch, cluster_ip)
         playbook_start = datetime.datetime.now()
         run_ansible_playbook(inventory_file, extra_vars, args.recipe)
         playbook_end = datetime.datetime.now()
@@ -497,6 +537,9 @@ def main():
             print("QA finished successuflly - removing test instances")
             print("")
             remove_instances_by_tag(tag)
+            runs = read_stored_runs()
+            del runs[tag]
+            store_runs(runs)
 
         instances_diff = instances_end - instances_start
         playbook_diff = playbook_end - playbook_start
@@ -518,5 +561,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # execute only if run as a script
     main()

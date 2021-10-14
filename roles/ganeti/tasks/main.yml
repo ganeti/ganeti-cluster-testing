@@ -8,7 +8,7 @@
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:
     path: /etc/hosts
-    line: "192.168.1.199   staging-cluster.ganeti.org"
+    line: "{{ ganeti_cluster_ip }}   staging-cluster.ganeti.org"
 
 - name: Install ganeti rapi users file (1/2)
   file:
