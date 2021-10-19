@@ -534,7 +534,7 @@ def main():
 
         if args.remove_instances_on_success:
             print("")
-            print("QA finished successuflly - removing test instances")
+            print("QA finished successfully - removing test instances")
             print("")
             remove_instances_by_tag(tag)
             runs = read_stored_runs()
