@@ -55,6 +55,14 @@
 - name: Create busybox initrd for use in ganeti instances
   command: /usr/local/sbin/create_busybox_initrd.sh
 
+- name: Create VNC password file
+  copy:
+    dest: /etc/ganeti/vnc-cluster-password
+    owner: root
+    group: root
+    mode: "0644"
+    content: "very-secure-vnc-password"
+
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/src/ganeti/qa/qa_utils.py"
 

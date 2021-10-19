@@ -51,6 +51,6 @@ chmod +x ${tmp}/etc/init.d/rcS
 ln ${tmp}/sbin/init ${tmp}/init
 
 cd ${tmp}
-find . -print0 | cpio --null --create --format=newc | gzip --best > /tmp/debian-buster-initramfs
+find . -print0 | cpio --null --create --format=newc | gzip --best > /boot/ganeti_busybox_initrd
 cd -
 rm -rf ${tmp}
