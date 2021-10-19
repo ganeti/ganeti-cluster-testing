@@ -2,7 +2,7 @@
 
 This repository allows to run automated Ganeti tests using the built-in Ganeti QA suite directly off a given git repository/branch. It will create a three-node cluster with the following scenario:
 - DRBD, file, plain and sharedfile (via NFS) storage options enabled
-- QEMU/KVM virtualisation
+- QEMU/KVM or Xen PVM/HVM virtualisation
 - simple instances which only boot a kernel with an initrd (which starts busybox-acpid to shutdown the instance on request)
 - bridged networking
 
@@ -38,9 +38,4 @@ If you need a different Ganeti environment (e.g. different storage or network op
 ## How fast is this?
 
 The QA Suite usually takes around an hour to finish. Building/configuring of the Instances and Ganeti itself depends vastly on the hardware used and ranges between 5 and 10 minutes.
-
-## Limitations
-
-- In theory, more than one test can run in parallel. However, currently the playbooks configure the same static cluster name/IP address and the same guest names/ip addresses for each virtual cluster and they all share the same network bridge. One possible solution would be to reserve ip addresses on the bridge network using `gnt-network` on the host and then forward these ip addresses to the playbooks to setup the virtual cluster accordingly.
-- Currently the script only runs as root. A better solution would be to use an unprivileged user and make sure this user has SSH access to the virtual Ganeti nodes. All communication with Ganeti is already done using Ganeti RAPI, so there should not be much `sudo` magic involved (or maybe none at all).
 
