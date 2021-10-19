@@ -1,2 +1,4 @@
-# ignore ansible .retry files
-*.retry
+.retry
+.idea
+__pycache__
+runs.json

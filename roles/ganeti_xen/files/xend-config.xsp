@@ -1,0 +1,7 @@
+(dom0-min-mem 0)
+(dom0-cpus 1)
+(xend-relocation-server yes)
+(xend-relocation-port 8002)
+(xend-relocation-address '')
+(xend-relocation-hosts-allow '^192\\.168\\.1\\.[0-9]+$')
+(vnc-listen '0.0.0.0') (vncpasswd '')

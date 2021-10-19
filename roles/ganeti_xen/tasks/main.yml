@@ -1,0 +1,55 @@
+---
+
+- name: Install xen packages
+  apt:
+    name: xen-system
+    state: present
+
+- name: Install xend-config.xsp
+  copy:
+    src: xend-config.xsp
+    dest: /etc/xen/xend-config.xsp
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Disable Xen autoballooning
+  lineinfile:
+    path: /etc/xen/xl.conf
+    regexp: "^#autoballon"
+    line: "autoballon=0"
+
+- name: Disable Xen save/restore
+  lineinfile:
+    path: /etc/default/xendomains
+    regexp: "^XENDOMAINS_SAVE"
+    line: "XENDOMAINS_SAVE="
+
+- name: Default-Boot into xen
+  lineinfile:
+    path: /etc/default/grub
+    line: "GRUB_DEFAULT=2"
+
+- name: Configure grub.d/xen.cfg
+  lineinfile:
+    path: /etc/default/grub.d/xen.cfg
+    regexp: "^#XEN_OVERRIDE_GRUB_DEFAULT"
+    line: "XEN_OVERRIDE_GRUB_DEFAULT=0" 
+
+- name: Configure grub.d/xen.cfg
+  lineinfile:
+    path: /etc/default/grub.d/xen.cfg
+    regexp: "^#GRUB_CMDLINE_XEN_DEFAULT"
+    line: 'GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=1G,max:1G"' 
+
+- name: Reload grub settings
+  command: update-grub
+
+- name: Reboot and wait for hosts to activate Xen environment
+  reboot:
+    msg: "Reboot for Xen setup"
+    connect_timeout: 5
+    reboot_timeout: 600
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: whoami

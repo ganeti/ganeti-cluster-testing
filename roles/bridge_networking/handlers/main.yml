@@ -1,4 +1,0 @@
----
-
-- name: Start network bridge
-  command: ifup virt-bridge

@@ -14,10 +14,6 @@
   "maxmem": "768M",
   "minmem": "256M",
 
-  "enabled-hypervisors": [
-    "kvm"
-  ],
-
   "enabled-disk-templates": [
     "plain",
     "drbd",
@@ -112,7 +108,7 @@
     "cluster-rename": false,
     "cluster-reserved-lvs": true,
     "# this enables a bunch of tests, but the 'user-shutdown' test seems to be broken": null,
-    "cluster-modify": true,
+    "cluster-modify": false,
     "cluster-oob": true,
     "cluster-instance-communication": true,
     "cluster-epo": true,
@@ -169,7 +165,8 @@
     "instance-info": true,
     "instance-list": true,
     "instance-migrate": true,
-    "instance-modify": true,
+    "# does not work on fake hypervisor, as it touches non-existing parameters": null,
+    "instance-modify": false,
     "instance-modify-primary": true,
     "# the following fails, not yet investigated": null,
     "instance-modify-disks": false,
