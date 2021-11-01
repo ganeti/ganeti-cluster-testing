@@ -476,6 +476,7 @@ def main():
     parser.add_argument('--recipe', default=None)
     parser.add_argument('--tag', default=None)
     parser.add_argument('--remove-instances-on-success', action='store_true', default=False)
+    parser.add_argument('--build-only', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -523,6 +524,10 @@ def main():
         playbook_start = datetime.datetime.now()
         run_ansible_playbook(inventory_file, extra_vars, args.recipe)
         playbook_end = datetime.datetime.now()
+
+        if args.build_only:
+            print("Finished setting up the cluster, but --build-only was given. Exiting now!")
+            sys.exit()
 
         src_file = store_recipe(args.recipe, instances)
         scp_file(src_file, "/tmp/recipe.json", instances[0])
