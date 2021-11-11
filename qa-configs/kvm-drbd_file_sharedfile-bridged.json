@@ -66,6 +66,9 @@
     },
     {
       "name": "kvm-test-instance02.staging.ganeti.org"
+    },
+    {
+      "name": "kvm-test-instance03.staging.ganeti.org"
     }
   ],
 
