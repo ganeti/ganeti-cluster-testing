@@ -165,7 +165,7 @@
     "instance-info": true,
     "instance-list": true,
     "instance-migrate": true,
-    "instance-modify": false,
+    "instance-modify": true,
     "instance-modify-primary": true,
     "# the following fails, not yet investigated": null,
     "instance-modify-disks": false,
