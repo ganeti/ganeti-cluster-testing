@@ -25,6 +25,10 @@
     "sharedfile"
   ],
 
+  "enabled-hypervisors": [
+    "kvm"
+  ],
+
   "# Lists of disks": null,
   "disks": [
     {

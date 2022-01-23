@@ -21,6 +21,10 @@
     "sharedfile"
   ],
 
+  "enabled-hypervisors": [
+    "fake"
+  ],
+
   "# Lists of disks": null,
   "disks": [
     {

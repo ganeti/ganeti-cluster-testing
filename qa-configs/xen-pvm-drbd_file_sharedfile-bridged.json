@@ -21,6 +21,10 @@
     "sharedfile"
   ],
 
+  "enabled-hypervisors": [
+    "xen-pvm"
+  ],
+
   "# Lists of disks": null,
   "disks": [
     {
