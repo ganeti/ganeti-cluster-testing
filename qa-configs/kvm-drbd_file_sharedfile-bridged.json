@@ -190,6 +190,7 @@
     "instance-device-hotplug": true,
     "instance-user-down": false,
     "instance-communication": false,
+    "instance-iterate-hvparams": true,
 
     "job-list": true,
 
