@@ -81,3 +81,11 @@
       - ethtool
       - dnsmasq
 
+- name: Install cronjob to overwrite /var/log/ganeti/qa-output.log
+  copy:
+    dest: /etc/cron.d/cleanup-ganeti-qa-log
+    owner: root
+    group: root
+    mode: "0644"
+    content: "*/5 * * * * root if [ -f /var/log/ganeti/qa-output.log ]; then echo > /var/log/ganeti/qa-output.log; fi\n"
+
