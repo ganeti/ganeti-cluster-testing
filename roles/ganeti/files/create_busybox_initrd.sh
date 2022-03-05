@@ -15,7 +15,7 @@ cp --archive /bin/busybox ${tmp}/bin/
 KERNEL=$(uname -r)
 echo "Copying kernel modules from host (source version: ${KERNEL})"
 mkdir -p "${tmp}/lib/modules/${KERNEL}"
-for MODULE in $(find "/lib/modules/${KERNEL}" -name 'button.ko' -or -name 'evdev.ko' -or -name '*xen*.ko'); do
+for MODULE in $(find "/lib/modules/${KERNEL}" -name 'button.ko' -or -name 'evdev.ko' -or -name '*xen*.ko' -or -name 'virtio*.ko'); do
 	cp --parents $MODULE "${tmp}";
 done
 cp "/lib/modules/${KERNEL}/modules.dep" "${tmp}/lib/modules/${KERNEL}/"
@@ -41,6 +41,8 @@ mount -t proc none /proc
 mount -t sysfs none /sys
 modprobe button
 modprobe evdev
+modprobe virtio_pci
+modprobe virtio_balloon
 modprobe xen-evtchn
 modprobe xen-acpi-processor
 acpid -d &
