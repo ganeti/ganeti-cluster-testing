@@ -558,7 +558,12 @@ def main():
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
-        remove_instances_by_tag(args.tag)
+        try:
+            remove_instances_by_tag(args.tag)
+        finally:
+            runs = read_stored_runs()
+            del runs[args.tag]
+            store_runs(runs)
 
     elif args.mode == "list-tests":
         print("Listing all instances grouped by tag")
