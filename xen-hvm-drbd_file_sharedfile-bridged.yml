@@ -34,8 +34,11 @@
 - hosts: master_node
   user: root
   tasks:
+    - name: Get xen version
+      shell: 'xl info xen_version|grep -oE "^[0-9]+\.[0-9]+"'
+      register: xen_version
     - name: Initialise cluster
-      command: "gnt-cluster init --no-ssh-init --vg-name gnt --master-netdev virt-bridge --master-netmask 24 --enabled-hypervisors xen-hvm --nic-parameters mode=bridged,link=virt-bridge --enabled-disk-templates=plain,file,drbd,sharedfile --shared-file-storage-dir=/srv/ganeti/shared-file-storage --file-storage-dir=/srv/ganeti/file-storage --hypervisor-parameters xen-hvm:kernel_path=/usr/lib/xen-4.11/boot/hvmloader,device_model=/usr/bin/qemu-system-x86_64 --default-iallocator hail --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB --ipolicy-disk-templates=plain,file,drbd,sharedfile --disk-parameters drbd:disk-barriers='n',protocol='C',dynamic-resync='true',c-plan-ahead='20',c-min-rate='10240',c-max-rate='1310720',net-custom='--max-buffers=16000 --max-epoch-size=16000' staging-cluster.ganeti.org"
+      command: "gnt-cluster init --no-ssh-init --vg-name gnt --master-netdev virt-bridge --master-netmask 24 --enabled-hypervisors xen-hvm --nic-parameters mode=bridged,link=virt-bridge --enabled-disk-templates=plain,file,drbd,sharedfile --shared-file-storage-dir=/srv/ganeti/shared-file-storage --file-storage-dir=/srv/ganeti/file-storage --hypervisor-parameters xen-hvm:kernel_path=/usr/lib/xen-{{ xen_version.stdout_lines[0] }}/boot/hvmloader,device_model=/usr/bin/qemu-system-x86_64 --default-iallocator hail --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB --ipolicy-disk-templates=plain,file,drbd,sharedfile --disk-parameters drbd:disk-barriers='n',protocol='C',dynamic-resync='true',c-plan-ahead='20',c-min-rate='10240',c-max-rate='1310720',net-custom='--max-buffers=16000 --max-epoch-size=16000' staging-cluster.ganeti.org"
     - name: Add nodes
       command: "gnt-node add --no-node-setup --no-ssh-key-check {{ item }}"
       with_items: "{{ groups['non_master_nodes'] }}"
