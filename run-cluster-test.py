@@ -1,15 +1,20 @@
 #!/usr/bin/python3
+import argparse
+import datetime
+from datetime import timezone
+import hashlib
+import io
 import json
 import os
+import random
+import selectors
+import shutil
 import socket
 import subprocess
 import sys
-import datetime
+import tempfile
 
 import client as rapi
-import random
-import tempfile
-import argparse
 
 DOMAIN = "staging.ganeti.org"
 INSTANCE_NAMES = [
@@ -233,6 +238,7 @@ CLUSTER_IP_MIN = 240
 CLUSTER_IP_MAX = 254
 
 STATE_FILE = "%s/runs.json" % (os.path.dirname(os.path.realpath(__file__)))
+STATS_PATH = "/var/lib/ganeti-qa/"
 
 def get_random_adjective():
     return random.choice(ADJECTIVES)
@@ -333,7 +339,15 @@ non_master_nodes
     return temp_file.name
 
 
-def scp_file(source_path, dest_path, target_host):
+def fix_permissions(folder):
+    for root, dirs, files in os.walk(folder):
+        for dir in dirs:
+            os.chmod(os.path.join(root, dir), 0o755)
+        for file in files:
+            os.chmod(os.path.join(root, file), 0o644)
+
+
+def scp_file_to(source_path, dest_path, target_host):
     cmd = [
         "/usr/bin/scp",
         source_path,
@@ -345,11 +359,13 @@ def scp_file(source_path, dest_path, target_host):
     subprocess.run(cmd, check=True)
 
 
-def run_remote_cmd(command, target_host):
+def scp_folder_from(source_host, source_path, dest_path):
     cmd = [
-        "/usr/bin/ssh",
-        "root@%s" % target_host,
-        command
+        "/usr/bin/scp",
+        "-q",
+        "-r",
+        "root@%s:%s" % (source_host, source_path),
+        dest_path
     ]
 
     print("Running '%s'" % " ".join(cmd))
@@ -357,7 +373,61 @@ def run_remote_cmd(command, target_host):
     subprocess.run(cmd, check=True)
 
 
-def run_ansible_playbook(inventory_file, extra_vars, recipe):
+def run_cmd(cmd, log_file):
+    print("Running '%s'" % " ".join(cmd))
+    process = subprocess.Popen(cmd,
+                               bufsize=1,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT,
+                               universal_newlines=True)
+
+    # Create callback function for process output
+    buf = io.StringIO()
+    def handle_output(stream, mask):
+        # Because the process' output is line buffered, there's only ever one
+        # line to read when this function is called
+        line = stream.readline()
+        buf.write(line)
+        sys.stdout.write(line)
+
+    # Register callback for an "available for read" event from subprocess' stdout stream
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ, handle_output)
+
+    # Loop until subprocess is terminated
+    while process.poll() is None:
+        # Wait for events and handle them with their registered callbacks
+        events = selector.select()
+        for key, mask in events:
+            callback = key.data
+            callback(key.fileobj, mask)
+
+    # Get process return code
+    return_code = process.wait()
+    selector.close()
+
+    success = (return_code == 0)
+
+    # Store buffered output
+    output = buf.getvalue()
+    buf.close()
+
+    with open(log_file, "w") as log_file:
+       log_file.write(output)
+
+    return success
+
+
+def run_remote_cmd(command, target_host, log_file):
+    cmd = [
+        "/usr/bin/ssh",
+        "root@%s" % target_host,
+        command
+    ]
+    return run_cmd(cmd, log_file)
+
+
+def run_ansible_playbook(inventory_file, extra_vars, recipe, log_file):
 
     cmd = [
         "ansible-playbook",
@@ -370,9 +440,7 @@ def run_ansible_playbook(inventory_file, extra_vars, recipe):
         "%s.yml" % recipe
     ]
 
-    print("Running '%s'" % " ".join(cmd))
-
-    subprocess.run(cmd, check=True)
+    return run_cmd(cmd, log_file)
 
 
 def init_rapi():
@@ -463,6 +531,27 @@ def get_instances_by_tag():
     return instances
 
 
+def store_stats(directory, recipe, os_version, source, branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime):
+    data = {
+        'started': started_ts,
+        'state': state,
+        'recipe': recipe,
+        'os-version': 'Debian/{}'.format(os_version.capitalize()),
+        'source-repository': source,
+        'source-branch': branch,
+        'instance-names': instances,
+        'runtimes': {
+            'instance-create': instance_create_runtime,
+            'playbook': playbook_runtime,
+            'qa': qa_runtime,
+            'overall': overall_runtime
+        }
+    }
+
+    with open(directory + '/run.json', 'w') as f:
+        json.dump(data, f)
+
+
 def main():
     global client
     client = init_rapi()
@@ -511,6 +600,20 @@ def main():
             "type": args.recipe
         }
         store_runs(runs)
+
+        identifier = '{}-{}-{}-{}-{}'.format(args.recipe, args.os_version, args.source, args.branch, datetime.datetime.now())
+        identifier_hash_object = hashlib.sha1(str.encode(identifier))
+        identifier_hash = identifier_hash_object.hexdigest()
+        stats_directory = STATS_PATH + identifier_hash
+        os.mkdir(stats_directory)
+
+        dt = datetime.datetime.now(timezone.utc)
+        utc_time = dt.replace(tzinfo=timezone.utc)
+        started_ts = utc_time.timestamp()
+
+        if not args.build_only:
+            store_stats(stats_directory, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, 0, 0, 0, 0)
+
         instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
         for instance in instances:
@@ -518,26 +621,54 @@ def main():
             create_instance(instance, args.os_version, tag)
             print("done.")
         instances_end = datetime.datetime.now()
+        instances_diff = instances_end - instances_start
 
         inventory_file = store_inventory(instances)
         extra_vars = "ganeti_source=%s ganeti_branch=%s ganeti_cluster_ip=%s" % (args.source, args.branch, cluster_ip)
         playbook_start = datetime.datetime.now()
-        run_ansible_playbook(inventory_file, extra_vars, args.recipe)
+        success = run_ansible_playbook(inventory_file, extra_vars, args.recipe, stats_directory + '/playbook.log')
         playbook_end = datetime.datetime.now()
+        playbook_diff = playbook_end - playbook_start
+
+        if not success:
+            state = "failed"
+            store_stats(tats_directory, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
+            sys.exit(1)
 
         if args.build_only:
             print("Finished setting up the cluster, but --build-only was given. Exiting now!")
             sys.exit()
 
         src_file = store_recipe(args.recipe, instances)
-        scp_file(src_file, "/tmp/recipe.json", instances[0])
+        scp_file_to(src_file, "/tmp/recipe.json", instances[0])
+        shutil.copyfile(src_file, stats_directory + '/qa-config.json')
 
         qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; python3 -u ganeti-qa.py --yes-do-it /tmp/recipe.json"
         qa_start = datetime.datetime.now()
-        run_remote_cmd(qa_command, instances[0])
+        success = run_remote_cmd(qa_command, instances[0], stats_directory + '/qa.log')
         qa_end = datetime.datetime.now()
 
-        if args.remove_instances_on_success:
+        if success:
+            state = 'finished'
+        else:
+            state = 'failed'
+
+        qa_diff = qa_end - qa_start
+        overall_runtime = instances_diff + playbook_diff + qa_diff
+
+        store_stats(stats_directory, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), qa_diff.total_seconds(), overall_runtime.total_seconds())
+
+        for instance in instances:
+            target_dir = stats_directory + '/' + instance
+            os.mkdir
+            try:
+                scp_folder_from(instance, "/var/log/ganeti", target_dir)
+            except Exception as e:
+                print("Failed to copy log folder from {}: {}".format(instance, e))
+
+        fix_permissions(stats_directory)
+
+        if success and args.remove_instances_on_success:
             print("")
             print("QA finished successfully - removing test instances")
             print("")
@@ -546,15 +677,11 @@ def main():
             del runs[tag]
             store_runs(runs)
 
-        instances_diff = instances_end - instances_start
-        playbook_diff = playbook_end - playbook_start
-        qa_diff = qa_end - qa_start
-
         print("Instance Creation Runtime: {}".format(instances_diff))
         print("Setup/Playbook Runtime: {}".format(playbook_diff))
         print("QA Suite Runtime: {}".format(qa_diff))
         print("")
-        print("Overall Runtime: {}".format(instances_diff + playbook_diff + qa_diff))
+        print("Overall Runtime: {}".format(overall_runtime))
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)

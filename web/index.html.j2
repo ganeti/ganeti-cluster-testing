@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Ganeti QA Runs</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="index,follow">
+	<meta name="description" content="Ganeti QA Runs">
+	<meta name="DC.Creator" content="Ganeti Project">
+	<meta name="DC.Language" content="en">
+<style>
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    margin: 2.75rem 0 1rem;
+    font-family: sans-serif;
+    font-weight: 400;
+    line-height: 1.15
+}
+
+h1 {
+    margin-top: 0;
+    font-size: 3.052em
+}
+
+h2 {
+    font-size: 2.441em
+}
+
+h3 {
+    font-size: 1.953em
+}
+
+h4 {
+    font-size: 1.563em
+}
+
+h5 {
+    font-size: 1.25em
+}
+
+p {
+    margin-bottom: 1.25em;
+    color: #6c757d
+}
+
+small,
+.text_small {
+    font-size: 0.8em
+}
+
+li {
+    color: #6c757d
+}
+
+body {
+    margin: 0;
+    padding: 2.5rem 0.5rem 0.5rem 0.5rem;
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #f8f9fa
+}
+
+main {
+    max-width: 50rem;
+    margin: 0 auto 10rem auto;
+    padding: 0 1rem
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+</style>
+</head>
+<body>
+	<p align="center">
+		<img src="images/ganeti.png" />
+	</p>
+	<h1>Ganeti QA Runs</h1>
+	<p>
+	This page lists all recent Ganeti QA runs
+	</p>
+	<table>
+		<tr>
+			<th>Started</th>
+			<th>Status</th>
+			<th>Recipe</th>
+			<th>OS</th>
+			<th>Source</th>
+			<th>Duration</th>
+			<th>Logfiles, QA Config etc.</th>
+		</tr>
+{% for run in runs %}
+		<tr>
+			<td>{{ run.started }}</td>
+			<td><img src="images/{{ run.state_image }}" width=32 alt="{{ run.state }}" /></td>
+			<td>{{ run.recipe }}</td>
+			<td>{{ run.os_version }}</td>
+			<td><a href="https://github.com/{{ run.source_repository }}/tree/{{ run.source_branch }}">{{ run.source_repository }}:{{ run.source_branch }}</a></td>
+			<td>{{ run.duration }}</td>
+			<td><a href="{{ run.log_folder_link }}">Show Logs/Config</a></td>
+		</tr>
+{% endfor %}
+	</table>
+	<p>
+	Last Update: {{ now }}
+	</p>
+</body>
+</html>
+
