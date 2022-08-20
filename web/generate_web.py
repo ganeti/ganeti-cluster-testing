@@ -33,11 +33,17 @@ for run in ganeti_runs:
     else:
         image = "blah"
 
+    if "tag" in run:
+        tag = run["tag"]
+    else:
+        tag = "n/a"
+
     seconds_format = time.gmtime(run["runtimes"]["overall"])
 
     template_data.append({
         "started": start_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
         "state": run["state"],
+        "tag": tag,
         "state_image": image,
         "os_version": run["os-version"],
         "source_repository": run["source-repository"],

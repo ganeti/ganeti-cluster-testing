@@ -101,6 +101,7 @@ tr:nth-child(even) {
 		<tr>
 			<th>Started</th>
 			<th>Status</th>
+			<th>Tag</th>
 			<th>Recipe</th>
 			<th>OS</th>
 			<th>Source</th>
@@ -111,6 +112,7 @@ tr:nth-child(even) {
 		<tr>
 			<td>{{ run.started }}</td>
 			<td><img src="images/{{ run.state_image }}" width=32 alt="{{ run.state }}" /></td>
+			<td>{{ run.tag }}</td>
 			<td>{{ run.recipe }}</td>
 			<td>{{ run.os_version }}</td>
 			<td><a href="https://github.com/{{ run.source_repository }}/tree/{{ run.source_branch }}">{{ run.source_repository }}:{{ run.source_branch }}</a></td>

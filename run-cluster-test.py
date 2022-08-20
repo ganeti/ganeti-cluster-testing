@@ -531,11 +531,12 @@ def get_instances_by_tag():
     return instances
 
 
-def store_stats(directory, recipe, os_version, source, branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime):
+def store_stats(directory, tag, recipe, os_version, source, branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime):
     data = {
         'started': started_ts,
         'state': state,
         'recipe': recipe,
+        'tag': tag,
         'os-version': 'Debian/{}'.format(os_version.capitalize()),
         'source-repository': source,
         'source-branch': branch,
@@ -550,6 +551,15 @@ def store_stats(directory, recipe, os_version, source, branch, instances, state,
 
     with open(directory + '/run.json', 'w') as f:
         json.dump(data, f)
+
+
+def create_stats_directory(args):
+   identifier = '{}-{}-{}-{}-{}'.format(args.recipe, args.os_version, args.source, args.branch, datetime.datetime.now())
+   identifier_hash_object = hashlib.sha1(str.encode(identifier))
+   identifier_hash = identifier_hash_object.hexdigest()
+   stats_directory = STATS_PATH + identifier_hash
+   os.mkdir(stats_directory)
+   return stats_directory
 
 
 def main():
@@ -601,18 +611,15 @@ def main():
         }
         store_runs(runs)
 
-        identifier = '{}-{}-{}-{}-{}'.format(args.recipe, args.os_version, args.source, args.branch, datetime.datetime.now())
-        identifier_hash_object = hashlib.sha1(str.encode(identifier))
-        identifier_hash = identifier_hash_object.hexdigest()
-        stats_directory = STATS_PATH + identifier_hash
-        os.mkdir(stats_directory)
+
+        stats_directory = create_stats_directory(args)
 
         dt = datetime.datetime.now(timezone.utc)
         utc_time = dt.replace(tzinfo=timezone.utc)
         started_ts = utc_time.timestamp()
 
         if not args.build_only:
-            store_stats(stats_directory, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, 0, 0, 0, 0)
+            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, 0, 0, 0, 0)
 
         instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
@@ -632,7 +639,7 @@ def main():
 
         if not success:
             state = "failed"
-            store_stats(tats_directory, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
+            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
             sys.exit(1)
 
         if args.build_only:
@@ -656,7 +663,7 @@ def main():
         qa_diff = qa_end - qa_start
         overall_runtime = instances_diff + playbook_diff + qa_diff
 
-        store_stats(stats_directory, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), qa_diff.total_seconds(), overall_runtime.total_seconds())
+        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), qa_diff.total_seconds(), overall_runtime.total_seconds())
 
         for instance in instances:
             target_dir = stats_directory + '/' + instance
