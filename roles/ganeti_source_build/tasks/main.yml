@@ -37,6 +37,17 @@
       - python3-yaml
     state: present
 
+- set_fact:
+    libghc_psqueue: "libghc-psqueue-dev"
+  when:
+    - ansible_distribution_major_version|int > 5
+    - ansible_distribution_major_version|int <= 11
+
+- set_fact:
+    libghc_psqueue: "libghc-psqueues-dev"
+  when:
+    - ansible_distribution_major_version == "testing"
+
 - name: Install Ganeti Haskell build dependencies
   apt:
     name:
@@ -60,7 +71,7 @@
       - libghc-old-time-dev
       - libghc-old-time-dev
       - libghc-parallel-dev
-      - libghc-psqueue-dev
+      - "{{ libghc_psqueue }}"
       - libghc-regex-pcre-dev
       - libghc-temporary-dev
       - libghc-temporary-dev

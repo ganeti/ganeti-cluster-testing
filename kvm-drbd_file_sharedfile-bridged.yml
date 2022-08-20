@@ -9,7 +9,6 @@
 
 - hosts: ganeti_nodes
   user: root
-  gather_facts: False
   roles:
     - ganeti_source_build
 
