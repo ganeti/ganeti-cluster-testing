@@ -1,0 +1,46 @@
+---
+
+- hosts: ganeti_nodes
+  user: root
+  gather_facts: False
+  tasks:
+    - name: Wait for SSH
+      local_action: "wait_for port=22 host={{ inventory_hostname }}"
+
+- hosts: ganeti_nodes
+  user: root
+  roles:
+    - ganeti_source_build
+
+- hosts: master_node
+  user: root
+  roles:
+    - ceph_bootstrap
+
+- hosts: non_master_nodes
+  user: root
+  roles:
+    - ceph_hosts
+
+- hosts: ganeti_nodes
+  user: root
+  roles:
+    - ceph_osd
+
+- hosts: ganeti_nodes
+  user: root
+  roles:
+    - ganeti
+
+- hosts: master_node
+  user: root
+  tasks:
+    - name: Create Ganeti rbd pool
+      command: "ceph osd pool create ganeti replicated"
+    - name: Initialise Ganeti rbd pool
+      command: "rbd pool init ganeti"
+    - name: Initialise cluster
+      command: "gnt-cluster init --no-ssh-init --master-netdev virt-bridge --master-netmask 24 --enabled-hypervisors kvm --nic-parameters mode=bridged,link=virt-bridge --disk-parameters=rbd:pool=ganeti --enabled-disk-templates=rbd --default-iallocator hail --hypervisor-parameters kvm:serial_console=false,spice_bind=0.0.0.0,spice_use_tls=false,kernel_path=/vmlinuz,initrd_path=/boot/ganeti_busybox_initrd,kernel_args=init=/init,cpu_type=host,disk_aio=threads,disk_cache=none,migration_bandwidth=1000 --ipolicy-bounds-specs min:nic-count=0,cpu-count=1,disk-count=0,spindle-use=0,disk-size=512M,memory-size=128M/max:nic-count=8,cpu-count=48,disk-count=8,spindle-use=8,disk-size=1TB,memory-size=1TB --ipolicy-disk-templates=rbd staging-cluster.ganeti.org"
+    - name: Add nodes
+      command: "gnt-node add --no-node-setup --no-ssh-key-check {{ item }}"
+      with_items: "{{ groups['non_master_nodes'] }}"

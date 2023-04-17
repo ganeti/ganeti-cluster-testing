@@ -1,0 +1,51 @@
+---
+
+- name: Install ceph/cephadm dependencies
+  apt:
+    name:
+      - podman
+      - catatonit
+      - sudo
+      - chrony
+      - ca-certificates
+      - lvm2
+      - ceph-common
+    state: present
+
+- name: store master node name in var
+  set_fact:
+    master_node: "{{ groups.master_node[0] }}"
+
+- name: Install ceph SSH public key
+  lineinfile:
+    path: /root/.ssh/authorized_keys
+    line: "{{ hostvars[master_node]['ceph_pubkey']['content']|b64decode }}"
+
+- name: Install ceph SSH public key to /etc/ceph/ceph.pub
+  copy:
+    dest: /etc/ceph/ceph.pub
+    owner: root
+    group: root
+    mode: "0644"
+    content: "{{ hostvars[master_node]['ceph_pubkey']['content']|b64decode }}"
+
+- name: Install ceph config to /etc/ceph/ceph.conf
+  copy:
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: "{{ hostvars[master_node]['ceph_conf']['content']|b64decode }}"
+
+- name: Install ceph keyring to /etc/ceph/ceph.client.admin.keyring
+  copy:
+    dest: /etc/ceph/ceph.client.admin.keyring
+    owner: root
+    group: root
+    mode: "0644"
+    content: "{{ hostvars[master_node]['ceph_keyring']['content']|b64decode }}"
+
+- name: Add ceph host
+  command: "ceph orch host add {{ inventory_hostname }}"
+  delegate_to: "{{ master_node }}"
+

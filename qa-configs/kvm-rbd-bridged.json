@@ -1,0 +1,226 @@
+{
+  "# Note:": null,
+  "# This file is stored in the JSON format and does not support": null,
+  "# comments. As a work-around, comments are keys starting with a hash": null,
+  "# sign (#).": null,
+
+  "name": "staging-cluster.ganeti.org",
+
+  "primary_ip_version": 4,
+
+  "vg-name": "gnt",
+
+  "os": "noop",
+  "maxmem": "768M",
+  "minmem": "256M",
+
+  "enabled-hypervisors": [
+    "kvm"
+  ],
+
+  "enabled-disk-templates": [
+    "rbd"
+  ],
+
+  "enabled-hypervisors": [
+    "kvm"
+  ],
+
+  "# Lists of disks": null,
+  "disks": [
+    {
+      "size": "768M",
+      "spindles": 1,
+      "name": "disk0",
+      "growth": "512M",
+      "spindles-growth": 1
+    },
+    {
+      "size": "512M",
+      "spindles": 1,
+      "name": "disk1",
+      "growth": "512M",
+      "spindles-growth": 0
+    }
+  ],
+
+  "nodes": [
+    {
+      "primary": "gnt-test01",
+      "secondary": "192.168.122.11"
+    },
+    {
+      "primary": "gnt-test02",
+      "secondary": "192.168.122.12"
+    },
+    {
+      "primary": "gnt-test03",
+      "secondary": "192.168.122.13"
+    }
+  ],
+
+  "modify_ssh_setup": false,
+
+  "instances": [
+    {
+      "name": "kvm-test-instance01.staging.ganeti.org"
+    },
+    {
+      "name": "kvm-test-instance02.staging.ganeti.org"
+    },
+    {
+      "name": "kvm-test-instance03.staging.ganeti.org"
+    }
+  ],
+
+  "groups": {
+    "group-with-nodes": "default",
+    "inexistent-groups": [
+      "group1",
+      "group2",
+      "group3"
+    ]
+  },
+
+  "networks": {
+    "inexistent-networks": [
+      "network1",
+      "network2",
+      "network3"
+    ]
+  },
+
+  "tests": {
+    "# Whether tests are enabled or disabled by default": null,
+    "default": false,
+
+    "env": true,
+    "# operating system tests seem to be xen-centric and fail on a kvm-enabled system (e.g. due to invalid kernel_path variable content)": null,
+    "os": false,
+    "tags": true,
+    "rapi": true,
+    "performance": true,
+    "test-jobqueue": true,
+    "delay": true,
+
+    "create-cluster": false,
+    "cluster-verify": true,
+    "cluster-info": true,
+    "cluster-burnin": false,
+    "cluster-command": true,
+    "cluster-copyfile": true,
+    "cluster-master-failover": false,
+    "# this does not work, possibly because it generates dsa keys": null,
+    "cluster-renew-crypto": false,
+    "cluster-destroy": true,
+    "cluster-rename": false,
+    "cluster-reserved-lvs": true,
+    "# this enables a bunch of tests, but the 'user-shutdown' test seems to be broken": null,
+    "cluster-modify": true,
+    "cluster-oob": true,
+    "cluster-instance-communication": true,
+    "cluster-epo": true,
+    "cluster-redist-conf": true,
+    "cluster-repair-disk-sizes": true,
+    "cluster-exclusive-storage": false,
+    "cluster-instance-policy": true,
+    "cluster-upgrade": false,
+
+    "haskell-confd": true,
+    "htools": true,
+
+    "group-list": true,
+    "group-rwops": true,
+    "# iptables stuff for SSH port redirects (to fake a non-standard SSH port) seem to fail at some point. not sure yet why.": null,
+    "group-custom-ssh-port": false,
+
+    "network": true,
+
+    "node-list": true,
+    "node-info": true,
+    "node-volumes": true,
+    "node-readd": true,
+    "node-storage": true,
+    "node-modify": true,
+    "# this requires a usable ouf-of-band management configuration. maybe this could be do-able with libvirt on the node running tests?": null,
+    "node-oob": false,
+
+    "# These tests need at least three nodes": null,
+    "node-evacuate": true,
+    "node-migrate": true,
+
+    "# This test needs at least two nodes": null,
+    "node-failover": true,
+
+    "instance-add-plain-disk": false,
+    "instance-add-file": false,
+    "instance-add-shared-file": false,
+    "instance-add-drbd-disk": false,
+    "instance-add-diskless": false,
+    "instance-add-rbd": true,
+    "instance-add-gluster": false,
+    "instance-add-restricted-by-disktemplates": true,
+    "instance-convert-disk": true,
+    "instance-plain-rapi-common-tests": false,
+    "# test fails, the command gnt-node modify --offline no gnt-test02 returns with an interactive question, command should use the --readd paramater to avoid that": null,
+    "instance-remove-drbd-offline": false,
+
+    "# we need more space on the root fs of our ganeti test VMs for this test to pass": null,
+    "instance-export": false,
+    "instance-failover": true,
+    "instance-grow-disk": true,
+    "instance-import": true,
+    "instance-info": true,
+    "instance-list": true,
+    "instance-migrate": true,
+    "instance-modify": true,
+    "instance-modify-primary": true,
+    "# the following fails, not yet investigated": null,
+    "instance-modify-disks": false,
+    "instance-reboot": true,
+    "# we do not yet have an OS provider, so no reinstall possible": null,
+    "instance-reinstall": false,
+    "instance-rename": true,
+    "instance-shutdown": true,
+    "# this fails because it tries to add/remove disks during instance runtime": null,
+    "instance-device-names": false,
+    "instance-device-hotplug": true,
+    "instance-user-down": false,
+    "instance-communication": false,
+    "instance-iterate-hvparams": true,
+
+    "job-list": true,
+
+    "jobqueue-performance": true,
+    "parallel-performance": true,
+
+    "# cron/ganeti-watcher should be disabled for these tests": null,
+    "instance-automatic-restart": false,
+    "instance-consecutive-failures": false,
+
+    "# This test might fail with certain hypervisor types, depending": null,
+    "# on whether they support the `gnt-instance console' command.": null,
+    "instance-console": false,
+
+    "# Disabled by default because they take rather long": null,
+    "instance-replace-disks": true,
+    "instance-recreate-disks": true,
+
+    "# Whether to test the tools/move-instance utility": null,
+    "inter-cluster-instance-move": false,
+
+    "# Run instance tests with different cluster configurations": null,
+    "default-instance-tests": true,
+    "exclusive-storage-instance-tests": false,
+
+    "# mond not present currently": null,
+    "mon-collector": false
+  },
+
+  "options": {
+    "reboot-types": ["soft", "hard", "full"],
+    "use-iallocators": true
+  },
+
+  "# vim: set syntax=javascript :": null
+}

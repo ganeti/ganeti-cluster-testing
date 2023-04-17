@@ -1,0 +1,40 @@
+---
+
+- name: Install ceph/cephadm dependencies
+  apt:
+    name:
+      - podman
+      - catatonit
+      - sudo
+      - chrony
+      - ca-certificates
+      - lvm2
+    state: present
+
+- name: Download cephadm
+  get_url:
+    url: https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm
+    dest: /usr/local/bin/cephadm
+    mode: "0755"
+
+- name: Initiate ceph
+  command: "cephadm bootstrap --mon-ip {{ ansible_default_ipv4.address }} --ssh-user root --skip-dashboard --skip-firewalld --skip-monitoring-stack --allow-fqdn-hostname --skip-mon-network"
+
+- name: Install local ceph command
+  command: "cephadm install ceph-common"
+
+- name: Read generated public key
+  slurp:
+    src: /etc/ceph/ceph.pub
+  register: ceph_pubkey
+
+- name: Read generated ceph.client.admin.keyring
+  slurp:
+    src: /etc/ceph/ceph.client.admin.keyring
+  register: ceph_keyring
+
+- name: Read generated ceph.conf
+  slurp:
+    src: /etc/ceph/ceph.conf
+  register: ceph_conf
+

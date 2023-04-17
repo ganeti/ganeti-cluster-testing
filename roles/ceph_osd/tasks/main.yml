@@ -1,0 +1,14 @@
+---
+
+- name: pause the playbook to wait for cephadm to finish
+  pause:
+    seconds: 30
+
+- name: store master node name in var
+  set_fact:
+    master_node: "{{ groups.master_node[0] }}"
+
+- name: Add /dev/vdb as OSD
+  command: "ceph orch daemon add osd {{ inventory_hostname }}:/dev/vdb"
+  delegate_to: "{{ master_node }}"
+
