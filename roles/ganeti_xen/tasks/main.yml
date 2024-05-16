@@ -2,7 +2,9 @@
 
 - name: Install xen packages
   apt:
-    name: xen-system
+    name:
+      - xen-system
+      - qemu-system-xen
     state: present
 
 - name: Install xend-config.xsp
