@@ -63,6 +63,14 @@
     mode: "0644"
     content: "very-secure-vnc-password"
 
+- name: Install ganeti defaults (enable debug logging for all services)
+  copy:
+    src: ganeti.defaults
+    dest: /etc/default/ganeti
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: "QUICKFIX: disable SSH strict host key checking in ganeti-testsuite"
   command: "sed -i -e 's/strict=True/strict=False/' /usr/src/ganeti/qa/qa_utils.py"
 

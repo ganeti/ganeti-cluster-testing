@@ -1,0 +1,8 @@
+# Default arguments for Ganeti daemons
+NODED_ARGS="-d"
+RAPI_ARGS="-d --require-authentication"
+CONFD_ARGS="-d"
+MOND_ARGS="-d"
+WCONFD_ARGS="-d"
+LUXID_ARGS="-d"
+KVMD_ARGS=""
