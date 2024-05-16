@@ -575,6 +575,7 @@ def main():
     parser.add_argument('--recipe', default=None)
     parser.add_argument('--tag', default=None)
     parser.add_argument('--remove-instances-on-success', action='store_true', default=False)
+    parser.add_argument('--remove-instances-on-error', action='store_true', default=False)
     parser.add_argument('--build-only', action='store_true', default=False)
 
     args = parser.parse_args()
@@ -640,6 +641,11 @@ def main():
         if not success:
             state = "failed"
             store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
+            if args.remove_instances_on_error:
+                remove_instances_by_tag(tag)
+                runs = read_stored_runs()
+                del runs[tag]
+                store_runs(runs)
             sys.exit(1)
 
         if args.build_only:
@@ -678,6 +684,15 @@ def main():
         if success and args.remove_instances_on_success:
             print("")
             print("QA finished successfully - removing test instances")
+            print("")
+            remove_instances_by_tag(tag)
+            runs = read_stored_runs()
+            del runs[tag]
+            store_runs(runs)
+
+        if not success and args.remove_instances_on_error:
+            print("")
+            print("QA failed - removing test instances as requested")
             print("")
             remove_instances_by_tag(tag)
             runs = read_stored_runs()
