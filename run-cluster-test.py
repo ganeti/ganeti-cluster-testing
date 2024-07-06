@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import os
+import gzip
 import random
 import selectors
 import shutil
@@ -373,6 +374,19 @@ def scp_folder_from(source_host, source_path, dest_path):
     subprocess.run(cmd, check=True)
 
 
+def compress_log_files_recursively(directory):
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.log'):
+                log_file_path = os.path.join(root, file)
+                gzip_file_path = log_file_path + '.gz'
+
+                with open(log_file_path, 'rb') as f_in:
+                    with gzip.open(gzip_file_path, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+
+                os.remove(log_file_path)
+
 def run_cmd(cmd, log_file):
     print("Running '%s'" % " ".join(cmd))
     process = subprocess.Popen(cmd,
@@ -678,6 +692,10 @@ def main():
                 scp_folder_from(instance, "/var/log/ganeti", target_dir)
             except Exception as e:
                 print("Failed to copy log folder from {}: {}".format(instance, e))
+            try:
+                compress_log_files_recursively(target_dir)
+            except Exception as e:
+                print("Failed to compress log files stored in {}: {}".format(target_dir, e))
 
         fix_permissions(stats_directory)
 
