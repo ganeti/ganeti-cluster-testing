@@ -2,7 +2,7 @@
 import argparse
 import atexit
 import datetime
-from datetime import timezone
+from datetime import timezone, timedelta
 import hashlib
 import io
 import json
@@ -241,6 +241,8 @@ CLUSTER_IP_MAX = 254
 
 STATE_FILE = "%s/runs.json" % (os.path.dirname(os.path.realpath(__file__)))
 STATS_PATH = "/var/lib/ganeti-qa/"
+
+AUTOCLEANUP_MAX_AGE_HOURS = 16
 
 def get_random_adjective():
     return random.choice(ADJECTIVES)
@@ -589,7 +591,7 @@ def main():
     client = init_rapi()
 
     parser = argparse.ArgumentParser(description="Manage Ganeti Cluster testing environments")
-    parser.add_argument('mode', choices=["remove-tests", "run-test", "list-tests"])
+    parser.add_argument('mode', choices=["remove-tests", "run-test", "list-tests", "auto-cleanup"])
     parser.add_argument('--source', default="ganeti/ganeti")
     parser.add_argument('--branch', default="master")
     parser.add_argument('--os-version', default=None)
@@ -631,7 +633,8 @@ def main():
         print("Using tag '%s' for this session" % tag)
         runs[tag] = {
             "cluster-ip": cluster_ip,
-            "type": args.recipe
+            "type": args.recipe,
+            "start-time": datetime.datetime.now().isoformat()
         }
         store_runs(runs)
 
@@ -742,6 +745,24 @@ def main():
     elif args.mode == "list-tests":
         print("Listing all instances grouped by tag")
         print(get_instances_by_tag())
+
+    elif args.mode == "auto-cleanup":
+
+        print("Removing all tests which have been started > %dh ago" % AUTOCLEANUP_MAX_AGE_HOURS)
+        runs = read_stored_runs()
+        current_time = datetime.datetime.now()
+        cleanup_list = []
+        for tag, run in runs.items():
+            if "start-time" in run:
+                start_time = datetime.datetime.fromisoformat(run["start-time"])
+                time_difference = current_time - start_time
+                if time_difference > timedelta(hours=AUTOCLEANUP_MAX_AGE_HOURS):
+                    print("Cleaning up run '%s'" % tag)
+                    remove_instances_by_tag(tag)
+                    cleanup_list.append(tag)
+        for tag in cleanup_list:
+            del runs[tag]
+        store_runs(runs)
 
 
 if __name__ == "__main__":
