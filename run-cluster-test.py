@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import argparse
+import atexit
 import datetime
 from datetime import timezone
 import hashlib
@@ -576,10 +577,16 @@ def create_stats_directory(args):
    return stats_directory
 
 
+def cleanup(tag):
+    remove_instances_by_tag(tag)
+    runs = read_stored_runs()
+    del runs[tag]
+    store_runs(runs)
+
+
 def main():
     global client
     client = init_rapi()
-
 
     parser = argparse.ArgumentParser(description="Manage Ganeti Cluster testing environments")
     parser.add_argument('mode', choices=["remove-tests", "run-test", "list-tests"])
@@ -619,6 +626,8 @@ def main():
     # operational logic
     if args.mode == "run-test":
         tag = "%s-%s" % (get_random_adjective(), get_random_instance_name())
+        if args.remove_instances_on_error:
+            atexit.register(cleanup, tag)
         print("Using tag '%s' for this session" % tag)
         runs[tag] = {
             "cluster-ip": cluster_ip,
@@ -656,10 +665,7 @@ def main():
             state = "failed"
             store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
             if args.remove_instances_on_error:
-                remove_instances_by_tag(tag)
-                runs = read_stored_runs()
-                del runs[tag]
-                store_runs(runs)
+                cleanup(tag)
             sys.exit(1)
 
         if args.build_only:
@@ -729,8 +735,9 @@ def main():
             remove_instances_by_tag(args.tag)
         finally:
             runs = read_stored_runs()
-            del runs[args.tag]
-            store_runs(runs)
+            if args.tag in runs:
+                del runs[args.tag]
+                store_runs(runs)
 
     elif args.mode == "list-tests":
         print("Listing all instances grouped by tag")
