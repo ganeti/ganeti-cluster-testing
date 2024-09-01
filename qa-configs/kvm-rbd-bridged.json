@@ -204,7 +204,7 @@
 
     "# Disabled by default because they take rather long": null,
     "instance-replace-disks": true,
-    "instance-recreate-disks": true,
+    "instance-recreate-disks": false,
 
     "# Whether to test the tools/move-instance utility": null,
     "inter-cluster-instance-move": false,
