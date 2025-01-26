@@ -2,8 +2,13 @@
 - name: Install required packages
   apt:
     name:
-      - ganeti-instance-debootstrap
       - ganeti-os-noop
+
+- name: Install required packages for Debian trixie
+  apt:
+    name: qemu-system-modules-spice
+    state: present
+  when: ansible_distribution_release == "trixie"
 
 - name: Make sure cluster name is present in /etc/hosts
   lineinfile:

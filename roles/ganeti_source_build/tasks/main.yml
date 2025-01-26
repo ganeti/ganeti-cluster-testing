@@ -61,7 +61,6 @@
       - libghc-old-time-dev
       - libghc-parallel-dev
       - libghc-psqueue-dev
-      - libghc-regex-pcre-dev
       - libghc-temporary-dev
       - libghc-temporary-dev
       - libghc-test-framework-hunit-dev
@@ -70,8 +69,20 @@
       - libghc-utf8-string-dev
       - libghc-vector-dev
       - libghc-zlib-dev
-      - libpcre3-dev
     state: present
+
+- name: Install old PCRE libraries (Debian < 13)
+  apt:
+    name:
+      - libghc-regex-pcre-dev
+      - libpcre3-dev
+  when: ansible_distribution_release != "trixie"
+
+- name: Install TDFA libraries (Debian >= 13)
+  apt:
+    name: libghc-regex-tdfa-dev
+    state: present
+  when: ansible_distribution_release == "trixie"
 
 - name: Checkout Ganeti repository
   git:
@@ -86,10 +97,17 @@
     chdir: /usr/src/ganeti
     creates: /usr/src/ganeti/Makefile.in
 
-- name: Run configure
+- name: Run configure with regex-pcre (Debian < 13)
   command:
     cmd: "sh configure --with-haskell-flags='-optl -Wl,-z,relro -optl -Wl,--as-needed' --enable-restricted-commands --prefix=/usr --localstatedir=/var --sysconfdir=/etc --enable-symlinks  --with-ssh-initscript='/usr/sbin/invoke-rc.d ssh' --with-iallocator-search-path=/usr/local/lib/ganeti/iallocators,/usr/lib/ganeti/iallocators --with-os-search-path=/srv/ganeti/os,/usr/local/lib/ganeti/os,/usr/lib/ganeti/os,/usr/share/ganeti/os --with-xen-kernel=/vmlinuz --with-kvm-kernel=/vmlinuz"
     chdir: /usr/src/ganeti
+  when: ansible_distribution_release != "trixie"
+
+- name: Run configure with regex-tdfa (Debian >= 13)
+  command:
+    cmd: "sh configure --with-haskell-flags='-optl -Wl,-z,relro -optl -Wl,--as-needed' --enable-restricted-commands --enable-regex-tdfa --prefix=/usr --localstatedir=/var --sysconfdir=/etc --enable-symlinks  --with-ssh-initscript='/usr/sbin/invoke-rc.d ssh' --with-iallocator-search-path=/usr/local/lib/ganeti/iallocators,/usr/lib/ganeti/iallocators --with-os-search-path=/srv/ganeti/os,/usr/local/lib/ganeti/os,/usr/lib/ganeti/os,/usr/share/ganeti/os --with-xen-kernel=/vmlinuz --with-kvm-kernel=/vmlinuz"
+    chdir: /usr/src/ganeti
+  when: ansible_distribution_release == "trixie"
 
 - name: Run make
   command:
