@@ -15,7 +15,7 @@ cp --archive /bin/busybox ${tmp}/bin/
 KERNEL=$(uname -r)
 echo "Copying kernel modules from host (source version: ${KERNEL})"
 mkdir -p "${tmp}/lib/modules/${KERNEL}"
-for MODULE in $(find "/lib/modules/${KERNEL}" -name 'button.ko' -or -name 'evdev.ko' -or -name '*xen*.ko' -or -name 'virtio*.ko'); do
+for MODULE in $(find "/lib/modules/${KERNEL}" -name 'button.ko*' -or -name 'evdev.ko*' -or -name '*xen*.ko*' -or -name 'virtio*.ko*'); do
 	cp --parents $MODULE "${tmp}";
 done
 cp "/lib/modules/${KERNEL}/modules.dep" "${tmp}/lib/modules/${KERNEL}/"
