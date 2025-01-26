@@ -652,8 +652,13 @@ def main():
         instances = generate_instance_names(3)
         for instance in instances:
             print("Creating instance %s... " % instance, end="")
-            create_instance(instance, args.os_version, tag)
-            print("done.")
+            try:
+                create_instance(instance, args.os_version, tag)
+                print("done.")
+            except:
+                state = "failed"
+                store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
+                sys.exit(1)
         instances_end = datetime.datetime.now()
         instances_diff = instances_end - instances_start
 
