@@ -15,6 +15,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 
 import client as rapi
 
@@ -522,6 +523,20 @@ def create_instance(name, os_type, tag, recipe):
         raise Exception("Failed to create instance %s: %s" % (name, job["opresult"]))
 
 
+INSTANCE_CREATE_MAX_WAIT_SECONDS = 5 * 60 * 60
+INSTANCE_CREATE_RETRY_INTERVAL_SECONDS = 5 * 60
+
+
+def is_resource_exhaustion_error(error_msg):
+    error_str = str(error_msg).lower()
+    resource_indicators = [
+        "ecode_nores", "ecode_temp_nores",
+        "not enough", "cannot allocate", "can't find adequate",
+        "insufficient", "no node", "out of memory",
+    ]
+    return any(indicator in error_str for indicator in resource_indicators)
+
+
 def remove_instances_by_tag(tag):
     result = client.Query("instance", ["name", "tags"])
     for data in result["data"]:
@@ -655,15 +670,40 @@ def main():
 
         instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
-        for instance in instances:
-            print("Creating instance %s... " % instance, end="")
+        attempt = 0
+        while True:
+            created_this_attempt = []
             try:
-                create_instance(instance, args.os_version, tag, args.recipe)
-                print("done.")
-            except:
-                state = "failed"
-                store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
-                sys.exit(1)
+                for instance in instances:
+                    print("Creating instance %s... " % instance, end="")
+                    create_instance(instance, args.os_version, tag, args.recipe)
+                    created_this_attempt.append(instance)
+                    print("done.")
+                break
+            except Exception as e:
+                if is_resource_exhaustion_error(e):
+                    elapsed = (datetime.datetime.now() - instances_start).total_seconds()
+                    remaining = INSTANCE_CREATE_MAX_WAIT_SECONDS - elapsed
+                    if remaining <= 0:
+                        print("\nResource exhaustion persists after 5 hours. Giving up.")
+                        state = "failed"
+                        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
+                        sys.exit(1)
+                    if created_this_attempt:
+                        print("\nCleaning up %d partially created instance(s) before retry..." % len(created_this_attempt))
+                        try:
+                            remove_instances_by_tag(tag)
+                        except Exception as cleanup_err:
+                            print("Warning: cleanup failed: %s" % cleanup_err)
+                    attempt += 1
+                    sleep_secs = min(INSTANCE_CREATE_RETRY_INTERVAL_SECONDS, remaining)
+                    print("\nNot enough resources (attempt %d). Retrying in %.0f minutes (up to %.1f hours remaining)..." % (
+                        attempt, sleep_secs / 60, remaining / 3600))
+                    time.sleep(sleep_secs)
+                else:
+                    state = "failed"
+                    store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
+                    sys.exit(1)
         instances_end = datetime.datetime.now()
         instances_diff = instances_end - instances_start
 
