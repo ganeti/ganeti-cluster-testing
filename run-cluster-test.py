@@ -475,7 +475,7 @@ def instance_exists(name):
     return True
 
 
-def create_instance(name, os_type, tag):
+def create_instance(name, os_type, tag, recipe):
     params = {
         '__version__': 1,
         'beparams': {
@@ -487,7 +487,7 @@ def create_instance(name, os_type, tag):
         'disk_template': "plain",
         'disks': [
             {
-                'size': "10G"
+                'size': "13G"
             },
             {
                 'size': "22G"
@@ -511,6 +511,11 @@ def create_instance(name, os_type, tag):
             tag
         ],
     }
+    if "fake" in recipe:
+        print("(with reduced disk/memory footprint due to fake hypervisor recipe)... ", end="")
+        params["beparams"]["memory"] = "3G"
+        params["beparams"]["minmem"] = "3G"
+        params["beparams"]["maxmem"] = "3G"
     job_id = client.CreateInstance(**params)
     if not client.WaitForJobCompletion(job_id, period=1):
         job = client.GetJobStatus(job_id)
@@ -653,7 +658,7 @@ def main():
         for instance in instances:
             print("Creating instance %s... " % instance, end="")
             try:
-                create_instance(instance, args.os_version, tag)
+                create_instance(instance, args.os_version, tag, args.recipe)
                 print("done.")
             except:
                 state = "failed"
