@@ -1,133 +1,378 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-	<title>Ganeti QA Runs</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="robots" content="index,follow">
-	<meta name="description" content="Ganeti QA Runs">
-	<meta name="DC.Creator" content="Ganeti Project">
-	<meta name="DC.Language" content="en">
+  <meta charset="UTF-8">
+  <title>Ganeti QA Runs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <meta name="description" content="Ganeti QA Runs">
+  <meta name="DC.Creator" content="Ganeti Project">
+  <meta name="DC.Language" content="en">
 <style>
-
-h1,
-h2,
-h3,
-h4,
-h5 {
-    margin: 2.75rem 0 1rem;
-    font-family: sans-serif;
-    font-weight: 400;
-    line-height: 1.15
-}
-
-h1 {
-    margin-top: 0;
-    font-size: 3.052em
-}
-
-h2 {
-    font-size: 2.441em
-}
-
-h3 {
-    font-size: 1.953em
-}
-
-h4 {
-    font-size: 1.563em
-}
-
-h5 {
-    font-size: 1.25em
-}
-
-p {
-    margin-bottom: 1.25em;
-    color: #6c757d
-}
-
-small,
-.text_small {
-    font-size: 0.8em
-}
-
-li {
-    color: #6c757d
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-    margin: 0;
-    padding: 2.5rem 0.5rem 0.5rem 0.5rem;
-    font-size: 16px;
-    font-family: sans-serif;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #f8f9fa
+  margin: 0;
+  font-size: 15px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background: #f0f2f5;
 }
 
-main {
-    max-width: 50rem;
-    margin: 0 auto 10rem auto;
-    padding: 0 1rem
+header {
+  background: #1a1e24;
+  color: #f8f9fa;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+header img { height: 36px; }
+header h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0;
+  color: #f8f9fa;
+}
+header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #adb5bd;
+}
+
+.container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 3rem;
+}
+
+/* ── Filter bar ─────────────────────────────── */
+#filter-bar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+#filter-bar label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #495057;
+}
+#filter-bar select,
+#filter-bar input[type="text"] {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #212529;
+}
+#filter-text { min-width: 200px; }
+#run-count {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: #6c757d;
+}
+
+/* ── Table wrapper ──────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
 }
 
 table {
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: #fff;
+  font-size: 0.85rem;
 }
 
-td {
-    padding-top: 0.2rem;
-    padding-bottom: 0.2rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+colgroup col:nth-child(1)  { width: 11%; } /* Started       */
+colgroup col:nth-child(2)  { width:  7%; } /* Status        */
+colgroup col:nth-child(3)  { width:  9%; } /* Tag           */
+colgroup col:nth-child(4)  { width: 13%; } /* Recipe        */
+colgroup col:nth-child(5)  { width:  7%; } /* OS            */
+colgroup col:nth-child(6)  { width: 16%; } /* Source        */
+colgroup col:nth-child(7)  { width:  7%; } /* Total         */
+colgroup col:nth-child(8)  { width:  8%; } /* Instance      */
+colgroup col:nth-child(9)  { width:  8%; } /* QA Setup      */
+colgroup col:nth-child(10) { width:  8%; } /* QA Run        */
+colgroup col:nth-child(11) { width:  6%; } /* Artifacts     */
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #343a40;
+  color: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
 }
 
-tr:nth-child(even) {
-    background-color: #f2f2f2;
+tbody td {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) td { background: #f8f9fa; }
+tbody tr:hover td { background: #e9f0fb !important; }
+
+/* ── Status badges ──────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-finished { background: #d1fae5; color: #065f46; }
+.badge-failed   { background: #fee2e2; color: #991b1b; }
+.badge-running  { background: #fef3c7; color: #92400e; }
+
+/* ── Timestamps ─────────────────────────────── */
+.time-abs { display: block; }
+.time-rel { display: block; font-size: 0.76rem; color: #6c757d; font-style: italic; }
+
+/* ── Artifact link ──────────────────────────── */
+.artifacts-link {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border: 1px solid #0d6efd;
+  border-radius: 5px;
+  color: #0d6efd;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+.artifacts-link:hover { background: #0d6efd; color: #fff; }
+
+/* ── Source link ────────────────────────────── */
+tbody td a { color: #0d6efd; text-decoration: none; }
+tbody td a:hover { text-decoration: underline; }
+
+/* ── Footer ─────────────────────────────────── */
+footer {
+  margin-top: 1.25rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-align: right;
+}
+
+/* ── Mobile card layout ─────────────────────── */
+@media (max-width: 767px) {
+  .container { padding: 0.75rem 0.75rem 2rem; }
+
+  .table-wrap { box-shadow: none; border-radius: 0; overflow-x: visible; }
+
+  table, thead, tbody, tr, th, td { display: block; }
+
+  thead tr { position: absolute; top: -9999px; left: -9999px; }
+
+  table { background: transparent; }
+
+  tbody tr {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  tbody tr:nth-child(even) td { background: transparent; }
+  tbody tr:hover td { background: transparent !important; }
+
+  tbody td {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.3rem 0.85rem;
+    border-bottom: 1px solid #f0f0f0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.85rem;
+  }
+  tbody tr:last-child td,
+  tbody td:last-child { border-bottom: none; }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.78rem;
+    flex: 0 0 110px;
+    padding-top: 0.1em;
+  }
+
+  .time-rel { display: inline; margin-left: 0.4em; }
 }
 </style>
 </head>
 <body>
-	<p align="center">
-		<img src="images/ganeti.png" />
-	</p>
-	<h1>Ganeti QA Runs</h1>
-	<p>
-	This page lists all recent Ganeti QA runs
-	</p>
-	<table>
-		<tr>
-			<th>Started</th>
-			<th>Status</th>
-			<th>Tag</th>
-			<th>Recipe</th>
-			<th>OS</th>
-			<th>Source</th>
-			<th>Duration</th>
-			<th>Instance Creation</th>
-			<th>QA Setup</th>
-			<th>Artifacts</th>
-		</tr>
+
+<header>
+  <img src="images/ganeti.png" alt="Ganeti logo">
+  <div>
+    <h1>Ganeti QA Runs</h1>
+    <p>Overview of recent Ganeti QA test runs</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="filter-bar">
+    <label for="filter-state">State</label>
+    <select id="filter-state">
+      <option value="">All</option>
+      <option value="running">Running</option>
+      <option value="finished">Finished</option>
+      <option value="failed">Failed</option>
+    </select>
+
+    <label for="filter-os">OS</label>
+    <select id="filter-os">
+      <option value="">All</option>
+    </select>
+
+    <label for="filter-text">Search</label>
+    <input type="text" id="filter-text" placeholder="tag, recipe, branch…">
+
+    <span id="run-count"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="runs-table">
+      <colgroup>
+        <col><col><col><col><col><col><col><col><col><col><col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Started</th>
+          <th>Status</th>
+          <th>Tag</th>
+          <th>Recipe</th>
+          <th>OS</th>
+          <th>Source</th>
+          <th>Total</th>
+          <th>Instance Create</th>
+          <th>QA Setup</th>
+          <th>QA Run</th>
+          <th>Artifacts</th>
+        </tr>
+      </thead>
+      <tbody>
 {% for run in runs %}
-		<tr>
-			<td>{{ run.started }}</td>
-			<td><img src="images/{{ run.state_image }}" width=32 alt="{{ run.state }}" /></td>
-			<td>{{ run.tag }}</td>
-			<td>{{ run.recipe }}</td>
-			<td>{{ run.os_version }}</td>
-			<td><a href="https://github.com/{{ run.source_repository }}/tree/{{ run.source_branch }}">{{ run.source_repository }}:{{ run.source_branch }}</a></td>
-			<td>{{ run.duration }}</td>
-			<td>{{ run.instance_create_duration }}</td>
-			<td>{{ run.playbook_duration }}</td>
-			<td><a href="{{ run.log_folder_link }}">Show</a></td>
-		</tr>
+        <tr data-state="{{ run.state }}" data-os="{{ run.os_version }}"
+            data-search="{{ run.tag }} {{ run.recipe }} {{ run.source_repository }} {{ run.source_branch }}">
+          <td data-label="Started">
+            <span class="time-abs">{{ run.started }}</span>
+            <span class="time-rel" data-unix="{{ run.started_unix }}"></span>
+          </td>
+          <td data-label="Status">
+            <span class="badge badge-{{ run.state }}">
+{% if run.state == "finished" %}
+              <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m256 76.801c-98.984 0-179.2 80.23-179.2 179.2s80.215 179.2 179.2 179.2c98.988 0 179.2-80.23 179.2-179.2s-80.211-179.2-179.2-179.2zm70.199 138.61-68.277 83.969c-1.3008 1.5938-3.1797 2.6016-5.2227 2.8008-2.043 0.19531-4.0859-0.43359-5.6562-1.7461l-48.152-40.168c-3.2578-2.7188-3.6953-7.5625-0.97656-10.82 2.7148-3.2578 7.5625-3.6953 10.82-0.97656l42.184 35.184 63.371-77.93c2.6797-3.293 7.5156-3.7891 10.805-1.1094 3.2812 2.6719 3.7734 7.5078 1.1055 10.797z" fill="currentColor"/></svg>
+              Finished
+{% elif run.state == "failed" %}
+              <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m253.44 76.801-194.56 358.4h394.24zm2.5586 296.96c-4.2383 0-7.6797-3.4414-7.6797-7.6797 0-4.2422 3.4414-7.6836 7.6797-7.6836s7.6797 3.4414 7.6797 7.6797c0 4.2422-3.4414 7.6836-7.6797 7.6836zm0-38.402c-4.2383 0-7.6797-3.4414-7.6797-7.6797v-87.039c0-4.2461 3.4414-7.6797 7.6797-7.6797s7.6797 3.4336 7.6797 7.6797v87.039c0 4.2383-3.4414 7.6797-7.6797 7.6797z" fill="currentColor"/></svg>
+              Failed
+{% else %}
+              <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m256 76.801c-98.984 0-179.2 80.23-179.2 179.2s80.215 179.2 179.2 179.2c98.988 0 179.2-80.23 179.2-179.2s-80.211-179.2-179.2-179.2zm87.039 186.88h-87.039c-2.0234 0-4-0.82031-5.4336-2.2461-1.4336-1.4297-2.2461-3.4102-2.2461-5.4336v-112.64c0-4.2383 3.4414-7.6797 7.6797-7.6797s7.6797 3.4414 7.6797 7.6797v104.96h79.359c4.2383 0 7.6797 3.4414 7.6797 7.6797s-3.4375 7.6797-7.6797 7.6797z" fill="currentColor"/></svg>
+              Running
+{% endif %}
+            </span>
+          </td>
+          <td data-label="Tag" title="{{ run.tag }}">{{ run.tag }}</td>
+          <td data-label="Recipe" title="{{ run.recipe }}">{{ run.recipe }}</td>
+          <td data-label="OS">{{ run.os_version }}</td>
+          <td data-label="Source" title="{{ run.source_repository }}:{{ run.source_branch }}">
+            <a href="https://github.com/{{ run.source_repository }}/tree/{{ run.source_branch }}">{{ run.source_repository }}:{{ run.source_branch }}</a>
+          </td>
+          <td data-label="Total">{{ run.duration }}</td>
+          <td data-label="Instance Create">{{ run.instance_create_duration }}</td>
+          <td data-label="QA Setup">{{ run.playbook_duration }}</td>
+          <td data-label="QA Run">{{ run.qa_duration }}</td>
+          <td data-label="Artifacts"><a class="artifacts-link" href="{{ run.log_folder_link }}">Show</a></td>
+        </tr>
 {% endfor %}
-	</table>
-	<p>
-	Last Update: {{ now }}
-	</p>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>Last update: {{ now }}</footer>
+
+</div>
+
+<script>
+(function () {
+  function relTime(sec) {
+    var d = Math.floor(Date.now() / 1000) - sec;
+    if (d < 60)    return 'just now';
+    if (d < 3600)  return Math.floor(d / 60) + ' min ago';
+    if (d < 86400) return Math.floor(d / 3600) + ' hr ago';
+    return Math.floor(d / 86400) + ' day(s) ago';
+  }
+
+  document.querySelectorAll('.time-rel').forEach(function (el) {
+    el.textContent = relTime(parseInt(el.dataset.unix, 10));
+  });
+
+  var osSet = new Set();
+  var rows = document.querySelectorAll('#runs-table tbody tr');
+  rows.forEach(function (r) { osSet.add(r.dataset.os); });
+  var osSel = document.getElementById('filter-os');
+  Array.from(osSet).sort().forEach(function (v) {
+    var o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    osSel.appendChild(o);
+  });
+
+  function updateCount(visible, total) {
+    var el = document.getElementById('run-count');
+    el.textContent = visible === total
+      ? total + ' runs'
+      : visible + ' of ' + total + ' runs';
+  }
+
+  function applyFilters() {
+    var state = document.getElementById('filter-state').value;
+    var os    = document.getElementById('filter-os').value;
+    var text  = document.getElementById('filter-text').value.toLowerCase();
+    var visible = 0;
+    rows.forEach(function (row) {
+      var ok = (!state || row.dataset.state === state)
+            && (!os    || row.dataset.os    === os)
+            && (!text  || row.dataset.search.toLowerCase().indexOf(text) !== -1);
+      row.style.display = ok ? '' : 'none';
+      if (ok) visible++;
+    });
+    updateCount(visible, rows.length);
+  }
+
+  ['filter-state', 'filter-os', 'filter-text'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', applyFilters);
+  });
+
+  updateCount(rows.length, rows.length);
+}());
+</script>
+
 </body>
 </html>
-

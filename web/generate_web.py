@@ -9,64 +9,62 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 WEB_PATH = "/var/lib/ganeti-qa/"
 
-ganeti_runs = []
-for file in os.listdir(WEB_PATH):
-    d = os.path.join(WEB_PATH, file)
-    if os.path.isdir(d):
-        id = os.path.basename(d)
-        run_path = d + "/run.json"
-        if os.path.exists(run_path):
-            with open(run_path) as f:
-                ganeti_runs.append(json.load(f))
-                ganeti_runs[-1]["id"] = id
+STATE_IMAGES = {
+    "running": "progress.svg",
+    "failed": "alert.svg",
+    "finished": "ok.svg",
+}
 
-ganeti_runs.sort(reverse=True, key=lambda x: x["started"])
-template_data = []
-for run in ganeti_runs:
-    start_ts = datetime.datetime.fromtimestamp(run["started"], timezone.utc)
-    if run["state"] == "running":
-        image = "progress.svg"
-    elif run["state"] == "failed":
-        image = "alert.svg"
-    elif run["state"] == "finished":
-        image = "ok.svg"
-    else:
-        image = "blah"
 
-    if "tag" in run:
-        tag = run["tag"]
-    else:
-        tag = "n/a"
+def fmt_duration(seconds):
+    return time.strftime("%H:%M:%S", time.gmtime(seconds)) if seconds > 0 else "—"
 
-    seconds_format = time.gmtime(run["runtimes"]["overall"])
-    instance_create_seconds_format = time.gmtime(run["runtimes"]["instance-create"])
-    playbook_seconds_format = time.gmtime(run["runtimes"]["playbook"])
 
-    template_data.append({
-        "started": start_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "state": run["state"],
-        "tag": tag,
-        "state_image": image,
-        "os_version": run["os-version"],
-        "source_repository": run["source-repository"],
-        "source_branch": run["source-branch"],
-        "recipe": run["recipe"],
-        "log_folder_link": "/{}".format(run["id"]),
-        "duration": time.strftime("%H:%M:%S", seconds_format),
-        "instance_create_duration": time.strftime("%H:%M:%S", instance_create_seconds_format),
-        "playbook_duration": time.strftime("%H:%M:%S", playbook_seconds_format),
-    })
-env = Environment(
-    loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
-    autoescape=select_autoescape()
-)
+def main():
+    ganeti_runs = []
+    for entry in os.listdir(WEB_PATH):
+        run_dir = os.path.join(WEB_PATH, entry)
+        if os.path.isdir(run_dir):
+            run_id = os.path.basename(run_dir)
+            run_path = os.path.join(run_dir, "run.json")
+            if os.path.exists(run_path):
+                with open(run_path) as f:
+                    ganeti_runs.append(json.load(f))
+                    ganeti_runs[-1]["id"] = run_id
 
-template = env.get_template("index.html.j2")
-dt = datetime.datetime.now(timezone.utc)
-utc_time = dt.replace(tzinfo=timezone.utc)
-now = utc_time.strftime("%Y-%m-%d %H:%M:%S UTC")
+    ganeti_runs.sort(reverse=True, key=lambda x: x["started"])
 
-index_html = template.render(runs=template_data, now=now)
-with open(WEB_PATH + "index.html","w") as f:
-    f.write(index_html)
+    template_data = []
+    for run in ganeti_runs:
+        start_ts = datetime.datetime.fromtimestamp(run["started"], timezone.utc)
+        template_data.append({
+            "started": start_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "started_unix": int(run["started"]),
+            "state": run["state"],
+            "tag": run.get("tag", "n/a"),
+            "state_image": STATE_IMAGES.get(run["state"], "blah"),
+            "os_version": run["os-version"],
+            "source_repository": run["source-repository"],
+            "source_branch": run["source-branch"],
+            "recipe": run["recipe"],
+            "log_folder_link": "/{}".format(run["id"]),
+            "duration": fmt_duration(run["runtimes"]["overall"]),
+            "instance_create_duration": fmt_duration(run["runtimes"]["instance-create"]),
+            "playbook_duration": fmt_duration(run["runtimes"]["playbook"]),
+            "qa_duration": fmt_duration(run["runtimes"].get("qa", 0)),
+        })
 
+    env = Environment(
+        loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
+        autoescape=select_autoescape(),
+    )
+    template = env.get_template("index.html.j2")
+    now = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    index_html = template.render(runs=template_data, now=now)
+    with open(os.path.join(WEB_PATH, "index.html"), "w") as f:
+        f.write(index_html)
+
+
+if __name__ == "__main__":
+    main()
