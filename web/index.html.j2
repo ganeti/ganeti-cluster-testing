@@ -106,7 +106,9 @@ tr:nth-child(even) {
 			<th>OS</th>
 			<th>Source</th>
 			<th>Duration</th>
-			<th>Logfiles, QA Config etc.</th>
+			<th>Instance Creation</th>
+			<th>QA Setup</th>
+			<th>Artifacts</th>
 		</tr>
 {% for run in runs %}
 		<tr>
@@ -117,7 +119,9 @@ tr:nth-child(even) {
 			<td>{{ run.os_version }}</td>
 			<td><a href="https://github.com/{{ run.source_repository }}/tree/{{ run.source_branch }}">{{ run.source_repository }}:{{ run.source_branch }}</a></td>
 			<td>{{ run.duration }}</td>
-			<td><a href="{{ run.log_folder_link }}">Show Logs/Config</a></td>
+			<td>{{ run.instance_create_duration }}</td>
+			<td>{{ run.playbook_duration }}</td>
+			<td><a href="{{ run.log_folder_link }}">Show</a></td>
 		</tr>
 {% endfor %}
 	</table>

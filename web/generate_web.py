@@ -39,6 +39,8 @@ for run in ganeti_runs:
         tag = "n/a"
 
     seconds_format = time.gmtime(run["runtimes"]["overall"])
+    instance_create_seconds_format = time.gmtime(run["runtimes"]["instance-create"])
+    playbook_seconds_format = time.gmtime(run["runtimes"]["playbook"])
 
     template_data.append({
         "started": start_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -50,7 +52,9 @@ for run in ganeti_runs:
         "source_branch": run["source-branch"],
         "recipe": run["recipe"],
         "log_folder_link": "/{}".format(run["id"]),
-        "duration": time.strftime("%H:%M:%S", seconds_format)
+        "duration": time.strftime("%H:%M:%S", seconds_format),
+        "instance_create_duration": time.strftime("%H:%M:%S", instance_create_seconds_format),
+        "playbook_duration": time.strftime("%H:%M:%S", playbook_seconds_format),
     })
 env = Environment(
     loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
