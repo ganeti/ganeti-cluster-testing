@@ -75,14 +75,10 @@ The user `qa-mcp` only needs read access to `/var/lib/ganeti-qa` and the repo's
 
 ## Caddy 1.0.4 reverse proxy
 
-Caddy fronts the server and enforces auth — the MCP process listens only on
-loopback. Add to your existing `Caddyfile` block:
+Caddy fronts the server — the MCP process listens only on loopback. Add to
+your existing `Caddyfile` block:
 
 ```
-basicauth /mcp/* {
-    aiagent <BCRYPT_HASH>
-}
-
 proxy /mcp 127.0.0.1:8765 {
     transparent
     websocket
@@ -90,9 +86,19 @@ proxy /mcp 127.0.0.1:8765 {
 }
 ```
 
+The QA data is public, so auth is not required. If you want to gate access
+anyway (e.g. to rate-limit casual crawlers, since `grep_*` runs regex over
+gzipped logs), add a `basicauth` directive:
+
+```
+basicauth /mcp/* {
+    aiagent <BCRYPT_HASH>
+}
+```
+
 Generate the bcrypt hash with `caddy -plugin http.basicauth -hash-password`
-(Caddy 1.x) or any bcrypt tool. For token-only access, swap `basicauth` for a
-`header` matcher checking `Authorization`.
+(Caddy 1.x) or any bcrypt tool. For token-only access, use a `header` matcher
+checking `Authorization` instead.
 
 ## Caveats
 
