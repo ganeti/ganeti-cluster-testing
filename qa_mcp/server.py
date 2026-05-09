@@ -17,14 +17,78 @@ from mcp.server.fastmcp import FastMCP
 
 from . import config, logs, recipes, runs
 
+_INSTRUCTIONS = f"""\
+Read-only access to Ganeti QA runs stored under {config.QA_ROOT}.
+
+Workflow
+--------
+- list_runs / get_run: discover and inspect runs (newest first).
+- list_logs: enumerate a run's log files. Each entry carries `kind` and,
+  for known files, a `description` explaining the file's purpose -- prefer
+  these to filename guessing when choosing what to read.
+- grep_run / grep_log: regex search across all or selected files of a run.
+- head_log / tail_log / read_log: inspect specific line ranges.
+All log responses are size-bounded (line and byte caps).
+
+Run directory layout
+--------------------
+Each run is a folder named by SHA-1 (the run_id). At the run root:
+  run.json        run config: OS version, Ganeti source repo, timings, state
+  qa-config.json  config passed to Ganeti's QA suite (tests enabled/disabled)
+  qa.log          Ganeti QA suite output -- on failure the last 50-100 lines
+                  usually show the cause; start here
+  playbook.log    Ansible output for staging VM setup, Ganeti build/install,
+                  and cluster init; check when failure occurs before QA starts
+
+Per-node subdirectories
+-----------------------
+One folder per staging VM, named `<host>.staging.ganeti.org`. One node is
+the Ganeti master and therefore has additional master-only daemon logs.
+Files of interest (kinds reported by list_logs in parentheses):
+  node-daemon.log.gz   (node-daemon)  per-node daemon: storage/network ops,
+                                      qemu/xen process spawning. For node-
+                                      or instance-level failures, tail this
+                                      on the affected node(s).
+  kvm-daemon.log.gz    (kvm-daemon)   KVM helper daemon (per node).
+  luxi-daemon.log.gz   (luxi-daemon)  luxid -- job submission, RAPI backend
+                                      (master only).
+  rapi-daemon.log.gz   (rapi-daemon)  RAPI HTTP daemon (master only).
+  conf-daemon.log.gz   (conf-daemon)  config daemon (master only).
+  wconf-daemon.log.gz  (wconf-daemon) write-config daemon (master only).
+  jobs.log.gz          (jobs)         Ganeti jobqueue log (master only).
+  commands.log.gz      (commands)     master command log (master only).
+  qa-output.log.gz     (qa-output)    verbose QA output on the master.
+  qa-profile.log.gz    (qa-profile)   compact list of QA test names with
+                                      timecodes; compare across runs to
+                                      spot timing regressions (master only).
+  os/add-<provider>-<instance>-<date>.log.gz       (os-add)
+                                      OS provider output for instance-add;
+                                      check on instance-create failures.
+  os/rename-<provider>-<old>-<new>-<date>.log.gz   (os-rename)
+                                      OS provider output for instance-rename.
+  kvm/<instance>.log.gz                (kvm-instance)
+                                      qemu output on instance start; check
+                                      when a KVM instance refuses to start
+                                      (e.g. illegal qemu/kvm command line).
+  xen/<instance>-<date>/...            (xen-config)
+                                      generated libxl/xen config files,
+                                      handed by node-daemon to xen.
+
+Triage hints
+------------
+- QA failed: tail qa.log first.
+- Setup never reached QA: tail playbook.log.
+- KVM instance failed to start: kvm/<instance>.log.gz on the host node.
+- Xen instance failed to start: xen/<instance>-<date>/ on the host node,
+  plus node-daemon.log.gz on that node.
+- Node-level operation failed: tail node-daemon.log.gz on the affected node.
+- Cluster-wide job failed: jobs.log.gz on the master.
+"""
+
+
 mcp = FastMCP(
     name="ganeti-qa",
-    instructions=(
-        "Read-only access to Ganeti QA runs stored under "
-        f"{config.QA_ROOT}. Use list_runs / get_run to discover work, "
-        "list_logs + grep_run to find errors, and read_log / tail_log to "
-        "inspect specific lines. All log responses are size-bounded."
-    ),
+    instructions=_INSTRUCTIONS,
 )
 
 

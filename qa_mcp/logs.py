@@ -34,6 +34,101 @@ def _is_log_like(name: str) -> bool:
     return name.endswith(_LOG_SUFFIXES) or name == "qa-config.json" or name == "run.json"
 
 
+_RUN_ROOT_FILES = {
+    "qa.log": (
+        "qa-suite",
+        "Ganeti QA suite output. On failure the last 50-100 lines usually show the cause.",
+    ),
+    "playbook.log": (
+        "playbook",
+        "Ansible output for staging VM setup and Ganeti build/install/cluster init. Check when failure occurs before QA starts.",
+    ),
+    "qa-config.json": (
+        "qa-config",
+        "Config passed to Ganeti's QA suite (which tests are enabled/disabled).",
+    ),
+    "run.json": (
+        "run-config",
+        "Run configuration: OS version, Ganeti source repository, job timings, state.",
+    ),
+}
+
+_NODE_ROOT_FILES = {
+    "node-daemon.log": ("node-daemon", "node"),
+    "node-daemon.log.gz": ("node-daemon", "node"),
+    "kvm-daemon.log": ("kvm-daemon", "node"),
+    "kvm-daemon.log.gz": ("kvm-daemon", "node"),
+    "luxi-daemon.log": ("luxi-daemon", "master"),
+    "luxi-daemon.log.gz": ("luxi-daemon", "master"),
+    "rapi-daemon.log": ("rapi-daemon", "master"),
+    "rapi-daemon.log.gz": ("rapi-daemon", "master"),
+    "conf-daemon.log": ("conf-daemon", "master"),
+    "conf-daemon.log.gz": ("conf-daemon", "master"),
+    "wconf-daemon.log": ("wconf-daemon", "master"),
+    "wconf-daemon.log.gz": ("wconf-daemon", "master"),
+    "jobs.log": ("jobs", "master"),
+    "jobs.log.gz": ("jobs", "master"),
+    "commands.log": ("commands", "master"),
+    "commands.log.gz": ("commands", "master"),
+    "qa-output.log": ("qa-output", "master"),
+    "qa-output.log.gz": ("qa-output", "master"),
+    "qa-profile.log": ("qa-profile", "master"),
+    "qa-profile.log.gz": ("qa-profile", "master"),
+}
+
+_NODE_DAEMON_DESCRIPTIONS = {
+    "node-daemon": "Per-node daemon: storage/network ops and qemu/xen process spawning. For any failed node- or instance-level operation, tail this on the affected node.",
+    "kvm-daemon": "KVM helper daemon (per node).",
+    "luxi-daemon": "luxid: job submission and RAPI backend (master node only).",
+    "rapi-daemon": "RAPI HTTP daemon (master node only).",
+    "conf-daemon": "Config daemon (master node only).",
+    "wconf-daemon": "Write-config daemon (master node only).",
+    "jobs": "Ganeti jobqueue log (master node only). Inspect for cluster-wide job failures.",
+    "commands": "Master-side command log (master node only).",
+    "qa-output": "Verbose QA output as observed on the master node.",
+    "qa-profile": "Compact list of QA test names with timecodes; compare across runs to spot timing regressions (master node only).",
+}
+
+
+def _classify(rel_path: str) -> tuple[str, Optional[str]]:
+    parts = rel_path.split(os.sep)
+    name = parts[-1]
+    if len(parts) == 1:
+        entry = _RUN_ROOT_FILES.get(name)
+        if entry:
+            return entry
+        return ("other", None)
+    if len(parts) >= 3:
+        sub = parts[1]
+        if sub == "os":
+            if name.startswith("add-"):
+                return (
+                    "os-add",
+                    "OS provider output for instance-add (format: add-<provider>-<instance>-<date>.log.gz). Check on instance-create failures.",
+                )
+            if name.startswith("rename-"):
+                return (
+                    "os-rename",
+                    "OS provider output for instance-rename (format: rename-<provider>-<old>-<new>-<date>.log.gz).",
+                )
+            return ("os", "OS provider output for an instance operation.")
+        if sub == "kvm":
+            return (
+                "kvm-instance",
+                "qemu output on instance start. Check when a KVM instance refuses to start (e.g. illegal qemu/kvm command line).",
+            )
+        if sub == "xen":
+            return (
+                "xen-config",
+                "Generated libxl/xen configuration for an instance, handed by node-daemon to xen.",
+            )
+    entry = _NODE_ROOT_FILES.get(name)
+    if entry:
+        kind, _scope = entry
+        return (kind, _NODE_DAEMON_DESCRIPTIONS.get(kind))
+    return ("other", None)
+
+
 def list_logs(run_id: str) -> list[dict]:
     run_dir = runs.run_dir_for(run_id)
     out = []
@@ -51,13 +146,18 @@ def list_logs(run_id: str) -> list[dict]:
             except OSError:
                 continue
             rel = os.path.relpath(abs_path, run_dir)
-            out.append({
+            kind, desc = _classify(rel)
+            entry = {
                 "path": rel,
                 "size_bytes": st.st_size,
                 "gzipped": name.endswith(".gz"),
                 "node": node,
                 "mtime": st.st_mtime,
-            })
+                "kind": kind,
+            }
+            if desc:
+                entry["description"] = desc
+            out.append(entry)
     out.sort(key=lambda e: e["path"])
     return out
 
