@@ -17,7 +17,7 @@ STATE_IMAGES = {
 
 
 def fmt_duration(seconds):
-    return time.strftime("%H:%M:%S", time.gmtime(seconds)) if seconds > 0 else "—"
+    return time.strftime("%H:%M", time.gmtime(seconds)) if seconds > 0 else "—"
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
     for run in ganeti_runs:
         start_ts = datetime.datetime.fromtimestamp(run["started"], timezone.utc)
         template_data.append({
-            "started": start_ts.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "started": start_ts.strftime("%Y-%m-%d %H:%M UTC"),
             "started_unix": int(run["started"]),
             "state": run["state"],
             "tag": run.get("tag", "n/a"),
@@ -59,7 +59,7 @@ def main():
         autoescape=select_autoescape(),
     )
     template = env.get_template("index.html.j2")
-    now = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    now = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     index_html = template.render(runs=template_data, now=now)
     with open(os.path.join(WEB_PATH, "index.html"), "w") as f:
