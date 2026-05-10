@@ -48,10 +48,10 @@ def main():
             "source_branch": run["source-branch"],
             "recipe": run["recipe"],
             "log_folder_link": "/{}".format(run["id"]),
-            "duration": fmt_duration(run["runtimes"]["overall"]),
-            "instance_create_duration": fmt_duration(run["runtimes"]["instance-create"]),
-            "playbook_duration": fmt_duration(run["runtimes"]["playbook"]),
-            "qa_duration": fmt_duration(run["runtimes"].get("qa", 0)),
+            "duration": fmt_duration(run.get("runtimes", {}).get("overall", 0)),
+            "instance_create_duration": fmt_duration(run.get("runtimes", {}).get("instance-create", 0)),
+            "playbook_duration": fmt_duration(run.get("runtimes", {}).get("playbook", 0)),
+            "qa_duration": fmt_duration(run.get("runtimes", {}).get("qa", 0)),
         })
 
     env = Environment(

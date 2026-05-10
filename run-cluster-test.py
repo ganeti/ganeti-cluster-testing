@@ -665,8 +665,13 @@ def main():
         utc_time = dt.replace(tzinfo=timezone.utc)
         started_ts = utc_time.timestamp()
 
+        instance_create_runtime = 0
+        playbook_runtime = 0
+        qa_runtime = 0
+        overall_runtime = 0
+
         if not args.build_only:
-            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, 0, 0, 0, 0)
+            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
 
         instances_start = datetime.datetime.now()
         instances = generate_instance_names(3)
@@ -706,6 +711,9 @@ def main():
                     sys.exit(1)
         instances_end = datetime.datetime.now()
         instances_diff = instances_end - instances_start
+        instance_create_runtime = instances_diff.total_seconds()
+
+        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
 
         inventory_file = store_inventory(instances)
         extra_vars = "ganeti_source=%s ganeti_branch=%s ganeti_cluster_ip=%s" % (args.source, args.branch, cluster_ip)
@@ -713,13 +721,16 @@ def main():
         success = run_ansible_playbook(inventory_file, extra_vars, args.recipe, stats_directory + '/playbook.log')
         playbook_end = datetime.datetime.now()
         playbook_diff = playbook_end - playbook_start
+        playbook_runtime = playbook_diff.total_seconds()
 
         if not success:
             state = "failed"
-            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), 0, instances_diff.total_seconds() + playbook_diff.total_seconds())
+            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, 0, instance_create_runtime + playbook_runtime)
             if args.remove_instances_on_error:
                 cleanup(tag)
             sys.exit(1)
+
+        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
 
         if args.build_only:
             print("Finished setting up the cluster, but --build-only was given. Exiting now!")
@@ -740,9 +751,10 @@ def main():
             state = 'failed'
 
         qa_diff = qa_end - qa_start
-        overall_runtime = instances_diff + playbook_diff + qa_diff
+        qa_runtime = qa_diff.total_seconds()
+        overall_runtime = instance_create_runtime + playbook_runtime + qa_runtime
 
-        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instances_diff.total_seconds(), playbook_diff.total_seconds(), qa_diff.total_seconds(), overall_runtime.total_seconds())
+        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
 
         for instance in instances:
             target_dir = stats_directory + '/' + instance
@@ -780,7 +792,7 @@ def main():
         print("Setup/Playbook Runtime: {}".format(playbook_diff))
         print("QA Suite Runtime: {}".format(qa_diff))
         print("")
-        print("Overall Runtime: {}".format(overall_runtime))
+        print("Overall Runtime: {}".format(timedelta(seconds=overall_runtime)))
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
