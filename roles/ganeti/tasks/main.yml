@@ -44,21 +44,28 @@
     group: root
     mode: "0644"
 
-- name: Install statically linked busybox version for custom initrd
+- name: Install tooling for building the guest initramfs
   apt:
-    name: busybox-static
+    name:
+      - dracut-core
+      - acpid
     state: present
 
-- name: Copy script to create busybox initrd
+- name: Install custom dracut module for the QA guest initramfs
   copy:
-    src: create_busybox_initrd.sh
-    dest: /usr/local/sbin/create_busybox_initrd.sh
+    src: 99ganeti-qa/
+    dest: /usr/lib/dracut/modules.d/99ganeti-qa/
     owner: root
     group: root
-    mode: "0750"
+    mode: preserve
+    directory_mode: "0755"
 
-- name: Create busybox initrd for use in ganeti instances
-  command: /usr/local/sbin/create_busybox_initrd.sh
+- name: Build QA guest initramfs with dracut
+  shell: >
+    dracut --force --no-hostonly
+    --add ganeti-qa
+    --omit "network nfs lvm crypt mdraid"
+    /boot/ganeti-qa-initrd $(uname -r)
 
 - name: Create VNC password file
   copy:

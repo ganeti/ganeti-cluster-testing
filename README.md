@@ -3,7 +3,7 @@
 This repository allows to run automated Ganeti tests using the built-in Ganeti QA suite directly off a given git repository/branch. It will create a three-node cluster with the following scenario:
 - DRBD, file, plain and sharedfile (via NFS) storage options enabled
 - QEMU/KVM or Xen PVM/HVM virtualisation
-- simple instances which only boot a kernel with an initrd (which starts busybox-acpid to shutdown the instance on request)
+- simple instances which only boot the host kernel (`/vmlinuz`) paired with a dracut-built initramfs (`/boot/ganeti-qa-initrd`) that runs acpid and udev forever in RAM — handling ACPI shutdown and PCIe hotplug binding of hot-added disks/NICs. See `roles/ganeti/files/99ganeti-qa/` for the dracut module.
 - bridged networking
 
 All interaction is done using the `run-cluster-test.py` script. Ganeti nodes will be created using the debootstrap OS provider.
