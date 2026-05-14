@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 import argparse
-import atexit
 import datetime
 from datetime import timezone, timedelta
 import hashlib
-import io
 import json
 import os
 import gzip
@@ -281,11 +279,18 @@ def read_stored_runs():
             return json.load(f)
     except FileNotFoundError:
         return {}
+    except json.JSONDecodeError as e:
+        print("Warning: %s is corrupt (%s); treating as empty." % (STATE_FILE, e))
+        return {}
 
 
 def store_runs(runs):
-    with open(STATE_FILE, 'w') as f:
+    tmp_path = STATE_FILE + ".tmp"
+    with open(tmp_path, 'w') as f:
         json.dump(runs, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, STATE_FILE)
 
 
 def get_cluster_ip():
@@ -318,6 +323,8 @@ def store_recipe(recipe_name, nodes):
     recipe["nodes"] = node_list
 
     json.dump(recipe, temp_file)
+    temp_file.flush()
+    temp_file.close()
 
     return temp_file.name
 
@@ -391,49 +398,42 @@ def compress_log_files_recursively(directory):
 
                 os.remove(log_file_path)
 
-def run_cmd(cmd, log_file):
+def run_cmd(cmd, log_file_path):
     print("Running '%s'" % " ".join(cmd))
-    process = subprocess.Popen(cmd,
-                               bufsize=1,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT,
-                               universal_newlines=True)
 
-    # Create callback function for process output
-    buf = io.StringIO()
-    def handle_output(stream, mask):
-        # Because the process' output is line buffered, there's only ever one
-        # line to read when this function is called
-        line = stream.readline()
-        buf.write(line)
-        sys.stdout.write(line)
+    with open(log_file_path, "w") as log_file:
+        process = subprocess.Popen(cmd,
+                                   bufsize=1,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   universal_newlines=True)
 
-    # Register callback for an "available for read" event from subprocess' stdout stream
-    selector = selectors.DefaultSelector()
-    selector.register(process.stdout, selectors.EVENT_READ, handle_output)
+        def handle_output(stream, mask):
+            # Because the process' output is line buffered, there's only ever
+            # one line to read when this function is called
+            line = stream.readline()
+            if not line:
+                return
+            log_file.write(line)
+            log_file.flush()
+            sys.stdout.write(line)
 
-    # Loop until subprocess is terminated
-    while process.poll() is None:
-        # Wait for events and handle them with their registered callbacks
-        events = selector.select()
-        for key, mask in events:
-            callback = key.data
-            callback(key.fileobj, mask)
+        selector = selectors.DefaultSelector()
+        selector.register(process.stdout, selectors.EVENT_READ, handle_output)
 
-    # Get process return code
-    return_code = process.wait()
-    selector.close()
+        try:
+            while process.poll() is None:
+                events = selector.select()
+                for key, mask in events:
+                    callback = key.data
+                    callback(key.fileobj, mask)
+            # Drain any remaining output after the process has exited
+            handle_output(process.stdout, selectors.EVENT_READ)
+            return_code = process.wait()
+        finally:
+            selector.close()
 
-    success = (return_code == 0)
-
-    # Store buffered output
-    output = buf.getvalue()
-    buf.close()
-
-    with open(log_file, "w") as log_file:
-       log_file.write(output)
-
-    return success
+    return return_code == 0
 
 
 def run_remote_cmd(command, target_host, log_file):
@@ -591,19 +591,43 @@ def store_stats(directory, tag, recipe, os_version, source, branch, instances, s
 
 
 def create_stats_directory(args):
-   identifier = '{}-{}-{}-{}-{}'.format(args.recipe, args.os_version, args.source, args.branch, datetime.datetime.now())
-   identifier_hash_object = hashlib.sha1(str.encode(identifier))
-   identifier_hash = identifier_hash_object.hexdigest()
-   stats_directory = STATS_PATH + identifier_hash
-   os.mkdir(stats_directory)
-   return stats_directory
+    identifier = '{}-{}-{}-{}-{}'.format(args.recipe, args.os_version, args.source, args.branch, datetime.datetime.now())
+    identifier_hash_object = hashlib.sha1(str.encode(identifier))
+    identifier_hash = identifier_hash_object.hexdigest()
+    stats_directory = STATS_PATH + identifier_hash
+    os.makedirs(stats_directory, exist_ok=True)
+    return stats_directory
 
 
-def cleanup(tag):
-    remove_instances_by_tag(tag)
-    runs = read_stored_runs()
-    del runs[tag]
-    store_runs(runs)
+def update_stats_state(stats_directory, state):
+    """Best-effort update of the per-run stats file's state field."""
+    if not stats_directory:
+        return
+    run_json_path = os.path.join(stats_directory, 'run.json')
+    try:
+        with open(run_json_path) as f:
+            data = json.load(f)
+        data['state'] = state
+        tmp_path = run_json_path + ".tmp"
+        with open(tmp_path, 'w') as f:
+            json.dump(data, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, run_json_path)
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        print("Warning: failed to update stats state at %s: %s" % (run_json_path, e))
+
+
+def remove_run_from_state(tag):
+    """Drop a tag from runs.json if present. Never raises."""
+    try:
+        current_runs = read_stored_runs()
+        if current_runs.pop(tag, None) is not None:
+            store_runs(current_runs)
+    except Exception as e:
+        print("Warning: failed to update %s for tag '%s': %s" % (STATE_FILE, tag, e))
 
 
 def main():
@@ -648,183 +672,195 @@ def main():
     # operational logic
     if args.mode == "run-test":
         tag = "%s-%s" % (get_random_adjective(), get_random_instance_name())
-        if args.remove_instances_on_error:
-            atexit.register(cleanup, tag)
         print("Using tag '%s' for this session" % tag)
-        runs[tag] = {
-            "cluster-ip": cluster_ip,
-            "type": args.recipe,
-            "start-time": datetime.datetime.now().isoformat()
-        }
-        store_runs(runs)
-
 
         stats_directory = create_stats_directory(args)
 
-        dt = datetime.datetime.now(timezone.utc)
-        utc_time = dt.replace(tzinfo=timezone.utc)
-        started_ts = utc_time.timestamp()
+        runs[tag] = {
+            "cluster-ip": cluster_ip,
+            "type": args.recipe,
+            "start-time": datetime.datetime.now().isoformat(),
+            "stats-directory": stats_directory,
+        }
+        store_runs(runs)
 
+        dt = datetime.datetime.now(timezone.utc)
+        started_ts = dt.replace(tzinfo=timezone.utc).timestamp()
+
+        instances = []
         instance_create_runtime = 0
         playbook_runtime = 0
         qa_runtime = 0
         overall_runtime = 0
+        instances_diff = timedelta(0)
+        playbook_diff = timedelta(0)
+        qa_diff = timedelta(0)
+        state = "failed"
+        exit_code = 1
 
-        if not args.build_only:
-            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, [], 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
+        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, 0, 0, 0, 0)
 
-        instances_start = datetime.datetime.now()
-        instances = generate_instance_names(3)
-        attempt = 0
-        while True:
-            created_this_attempt = []
-            try:
-                for instance in instances:
-                    print("Creating instance %s... " % instance, end="")
-                    create_instance(instance, args.os_version, tag, args.recipe)
-                    created_this_attempt.append(instance)
-                    print("done.")
-                break
-            except Exception as e:
-                if is_resource_exhaustion_error(e):
-                    elapsed = (datetime.datetime.now() - instances_start).total_seconds()
-                    remaining = INSTANCE_CREATE_MAX_WAIT_SECONDS - elapsed
-                    if remaining <= 0:
-                        print("\nResource exhaustion persists after 5 hours. Giving up.")
-                        state = "failed"
-                        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
-                        sys.exit(1)
-                    if created_this_attempt:
-                        print("\nCleaning up %d partially created instance(s) before retry..." % len(created_this_attempt))
-                        try:
-                            remove_instances_by_tag(tag)
-                        except Exception as cleanup_err:
-                            print("Warning: cleanup failed: %s" % cleanup_err)
-                    attempt += 1
-                    sleep_secs = min(INSTANCE_CREATE_RETRY_INTERVAL_SECONDS, remaining)
-                    print("\nNot enough resources (attempt %d). Retrying in %.0f minutes (up to %.1f hours remaining)..." % (
-                        attempt, sleep_secs / 60, remaining / 3600))
-                    time.sleep(sleep_secs)
+        try:
+            instances_start = datetime.datetime.now()
+            instances = generate_instance_names(3)
+            attempt = 0
+            while True:
+                created_this_attempt = []
+                try:
+                    for instance in instances:
+                        print("Creating instance %s... " % instance, end="")
+                        create_instance(instance, args.os_version, tag, args.recipe)
+                        created_this_attempt.append(instance)
+                        print("done.")
+                    break
+                except Exception as e:
+                    if is_resource_exhaustion_error(e):
+                        elapsed = (datetime.datetime.now() - instances_start).total_seconds()
+                        remaining = INSTANCE_CREATE_MAX_WAIT_SECONDS - elapsed
+                        if remaining <= 0:
+                            print("\nResource exhaustion persists after 5 hours. Giving up.")
+                            raise
+                        if created_this_attempt:
+                            print("\nCleaning up %d partially created instance(s) before retry..." % len(created_this_attempt))
+                            try:
+                                remove_instances_by_tag(tag)
+                            except Exception as cleanup_err:
+                                print("Warning: cleanup failed: %s" % cleanup_err)
+                        attempt += 1
+                        sleep_secs = min(INSTANCE_CREATE_RETRY_INTERVAL_SECONDS, remaining)
+                        print("\nNot enough resources (attempt %d). Retrying in %.0f minutes (up to %.1f hours remaining)..." % (
+                            attempt, sleep_secs / 60, remaining / 3600))
+                        time.sleep(sleep_secs)
+                    else:
+                        raise
+            instances_diff = datetime.datetime.now() - instances_start
+            instance_create_runtime = instances_diff.total_seconds()
+
+            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, 0, 0, instance_create_runtime)
+
+            inventory_file = store_inventory(instances)
+            extra_vars = "ganeti_source=%s ganeti_branch=%s ganeti_cluster_ip=%s" % (args.source, args.branch, cluster_ip)
+            playbook_start = datetime.datetime.now()
+            playbook_success = run_ansible_playbook(inventory_file, extra_vars, args.recipe, stats_directory + '/playbook.log')
+            playbook_diff = datetime.datetime.now() - playbook_start
+            playbook_runtime = playbook_diff.total_seconds()
+
+            if not playbook_success:
+                print("Ansible playbook failed.")
+            elif args.build_only:
+                print("Finished setting up the cluster, but --build-only was given. Exiting now!")
+                state = "built"
+                exit_code = 0
+            else:
+                store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, 0, instance_create_runtime + playbook_runtime)
+
+                src_file = store_recipe(args.recipe, instances)
+                scp_file_to(src_file, "/tmp/recipe.json", instances[0])
+                shutil.copyfile(src_file, stats_directory + '/qa-config.json')
+
+                qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; python3 -u ganeti-qa.py --yes-do-it /tmp/recipe.json"
+                qa_start = datetime.datetime.now()
+                qa_success = run_remote_cmd(qa_command, instances[0], stats_directory + '/qa.log')
+                qa_diff = datetime.datetime.now() - qa_start
+                qa_runtime = qa_diff.total_seconds()
+
+                if qa_success:
+                    state = "finished"
+                    exit_code = 0
                 else:
                     state = "failed"
-                    store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, 0, 0, 0, 0)
-                    sys.exit(1)
-        instances_end = datetime.datetime.now()
-        instances_diff = instances_end - instances_start
-        instance_create_runtime = instances_diff.total_seconds()
 
-        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
+                for instance in instances:
+                    target_dir = stats_directory + '/' + instance
+                    try:
+                        os.makedirs(target_dir, exist_ok=True)
+                        scp_folder_from(instance, "/var/log/ganeti", target_dir)
+                    except Exception as e:
+                        print("Failed to copy log folder from {}: {}".format(instance, e))
+                    try:
+                        compress_log_files_recursively(target_dir)
+                    except Exception as e:
+                        print("Failed to compress log files stored in {}: {}".format(target_dir, e))
 
-        inventory_file = store_inventory(instances)
-        extra_vars = "ganeti_source=%s ganeti_branch=%s ganeti_cluster_ip=%s" % (args.source, args.branch, cluster_ip)
-        playbook_start = datetime.datetime.now()
-        success = run_ansible_playbook(inventory_file, extra_vars, args.recipe, stats_directory + '/playbook.log')
-        playbook_end = datetime.datetime.now()
-        playbook_diff = playbook_end - playbook_start
-        playbook_runtime = playbook_diff.total_seconds()
-
-        if not success:
+                try:
+                    fix_permissions(stats_directory)
+                except Exception as e:
+                    print("Failed to fix permissions on {}: {}".format(stats_directory, e))
+        except SystemExit:
+            raise
+        except BaseException as e:
+            print("Run aborted: %s: %s" % (type(e).__name__, e))
             state = "failed"
-            store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, 0, instance_create_runtime + playbook_runtime)
-            if args.remove_instances_on_error:
-                cleanup(tag)
-            sys.exit(1)
-
-        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
-
-        if args.build_only:
-            print("Finished setting up the cluster, but --build-only was given. Exiting now!")
-            sys.exit()
-
-        src_file = store_recipe(args.recipe, instances)
-        scp_file_to(src_file, "/tmp/recipe.json", instances[0])
-        shutil.copyfile(src_file, stats_directory + '/qa-config.json')
-
-        qa_command = "export PYTHONPATH=\"/usr/src/ganeti:/usr/share/ganeti/default\"; cd /usr/src/ganeti/qa; python3 -u ganeti-qa.py --yes-do-it /tmp/recipe.json"
-        qa_start = datetime.datetime.now()
-        success = run_remote_cmd(qa_command, instances[0], stats_directory + '/qa.log')
-        qa_end = datetime.datetime.now()
-
-        if success:
-            state = 'finished'
-        else:
-            state = 'failed'
-
-        qa_diff = qa_end - qa_start
-        qa_runtime = qa_diff.total_seconds()
-        overall_runtime = instance_create_runtime + playbook_runtime + qa_runtime
-
-        store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
-
-        for instance in instances:
-            target_dir = stats_directory + '/' + instance
-            os.mkdir
+        finally:
+            overall_runtime = instance_create_runtime + playbook_runtime + qa_runtime
             try:
-                scp_folder_from(instance, "/var/log/ganeti", target_dir)
-            except Exception as e:
-                print("Failed to copy log folder from {}: {}".format(instance, e))
-            try:
-                compress_log_files_recursively(target_dir)
-            except Exception as e:
-                print("Failed to compress log files stored in {}: {}".format(target_dir, e))
+                store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, state, started_ts, instance_create_runtime, playbook_runtime, qa_runtime, overall_runtime)
+            except Exception as stats_err:
+                print("Warning: failed to write final stats: %s" % stats_err)
 
-        fix_permissions(stats_directory)
-
-        if success and args.remove_instances_on_success:
-            print("")
-            print("QA finished successfully - removing test instances")
-            print("")
-            remove_instances_by_tag(tag)
-            runs = read_stored_runs()
-            del runs[tag]
-            store_runs(runs)
-
-        if not success and args.remove_instances_on_error:
-            print("")
-            print("QA failed - removing test instances as requested")
-            print("")
-            remove_instances_by_tag(tag)
-            runs = read_stored_runs()
-            del runs[tag]
-            store_runs(runs)
+            should_remove = (
+                (state in ("finished", "built") and args.remove_instances_on_success)
+                or (state == "failed" and args.remove_instances_on_error)
+            )
+            if should_remove:
+                print("")
+                print("Removing test instances (state=%s)" % state)
+                print("")
+                try:
+                    remove_instances_by_tag(tag)
+                except Exception as e:
+                    print("Warning: failed to remove instances for tag '%s': %s" % (tag, e))
+                remove_run_from_state(tag)
 
         print("Instance Creation Runtime: {}".format(instances_diff))
         print("Setup/Playbook Runtime: {}".format(playbook_diff))
         print("QA Suite Runtime: {}".format(qa_diff))
         print("")
         print("Overall Runtime: {}".format(timedelta(seconds=overall_runtime)))
+        sys.exit(exit_code)
 
     elif args.mode == "remove-tests":
         print("Removing all instances from the cluster with the tag '%s'" % args.tag)
+        stats_dir = runs.get(args.tag, {}).get("stats-directory")
         try:
             remove_instances_by_tag(args.tag)
         finally:
-            runs = read_stored_runs()
-            if args.tag in runs:
-                del runs[args.tag]
-                store_runs(runs)
+            remove_run_from_state(args.tag)
+            update_stats_state(stats_dir, "removed")
 
     elif args.mode == "list-tests":
         print("Listing all instances grouped by tag")
         print(get_instances_by_tag())
 
     elif args.mode == "auto-cleanup":
-
         print("Removing all tests which have been started > %dh ago" % AUTOCLEANUP_MAX_AGE_HOURS)
-        runs = read_stored_runs()
         current_time = datetime.datetime.now()
         cleanup_list = []
-        for tag, run in runs.items():
-            if "start-time" in run:
-                start_time = datetime.datetime.fromisoformat(run["start-time"])
-                time_difference = current_time - start_time
-                if time_difference > timedelta(hours=AUTOCLEANUP_MAX_AGE_HOURS):
-                    print("Cleaning up run '%s'" % tag)
+        try:
+            for tag, run in runs.items():
+                if "start-time" not in run:
+                    continue
+                try:
+                    start_time = datetime.datetime.fromisoformat(run["start-time"])
+                except ValueError as e:
+                    print("Warning: cannot parse start-time of run '%s': %s" % (tag, e))
+                    continue
+                if (current_time - start_time) <= timedelta(hours=AUTOCLEANUP_MAX_AGE_HOURS):
+                    continue
+                print("Cleaning up run '%s'" % tag)
+                try:
                     remove_instances_by_tag(tag)
+                    update_stats_state(run.get("stats-directory"), "timed-out")
                     cleanup_list.append(tag)
-        for tag in cleanup_list:
-            del runs[tag]
-        store_runs(runs)
+                except Exception as e:
+                    print("Warning: failed to clean up run '%s': %s" % (tag, e))
+        finally:
+            for tag in cleanup_list:
+                runs.pop(tag, None)
+            try:
+                store_runs(runs)
+            except Exception as e:
+                print("Warning: failed to persist %s: %s" % (STATE_FILE, e))
 
 
 if __name__ == "__main__":
