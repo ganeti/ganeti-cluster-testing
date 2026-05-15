@@ -23,9 +23,14 @@ install() {
 	inst_simple "$moddir/acpi-power.conf" "/etc/acpi/events/power"
 	inst_simple "$moddir/acpi-handler.sh" "/etc/acpi/handler.sh"
 
-	# Run as the last hook before dracut would mount the (non-existent) root
-	# filesystem. By this point udev is up and handling hotplug events.
+	# These guests are booted without a root= kernel arg, so dracut's normal
+	# pipeline stalls in initqueue waiting for a root device that never
+	# appears. Install the stay-hook in both pre-mount (in case initqueue
+	# settles anyway) and emergency (the path dracut takes once it gives up
+	# looking for root). Whichever fires first wins; the other is a no-op
+	# because the script blocks forever.
 	inst_hook pre-mount 99 "$moddir/ganeti-qa-stay.sh"
+	inst_hook emergency 99 "$moddir/ganeti-qa-stay.sh"
 }
 
 installkernel() {
