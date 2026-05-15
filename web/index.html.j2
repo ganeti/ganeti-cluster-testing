@@ -143,9 +143,15 @@ tbody tr:hover td { background: #e9f0fb !important; }
   font-weight: 600;
   white-space: nowrap;
 }
-.badge-finished { background: #d1fae5; color: #065f46; }
-.badge-failed   { background: #fee2e2; color: #991b1b; }
-.badge-running  { background: #fef3c7; color: #92400e; }
+.badge-finished      { background: #d1fae5; color: #065f46; }
+.badge-failed        { background: #fee2e2; color: #991b1b; }
+.badge-alloc-failed  { background: #fee2e2; color: #991b1b; }
+.badge-setup-failed  { background: #fee2e2; color: #991b1b; }
+.badge-running       { background: #fef3c7; color: #92400e; }
+.badge-canceled      { background: #e5e7eb; color: #374151; }
+.badge-built         { background: #dbeafe; color: #1e40af; }
+.badge-removed       { background: #e5e7eb; color: #374151; }
+.badge-timed-out     { background: #e5e7eb; color: #374151; }
 
 /* ── Timestamps ─────────────────────────────── */
 .time-abs { display: block; }
@@ -244,6 +250,9 @@ footer {
       <option value="running">Running</option>
       <option value="finished">Finished</option>
       <option value="failed">Failed</option>
+      <option value="alloc-failed">Alloc Failed</option>
+      <option value="setup-failed">Setup Failed</option>
+      <option value="canceled">Canceled</option>
     </select>
 
     <label for="filter-os">OS</label>
@@ -289,14 +298,14 @@ footer {
             <span class="badge badge-{{ run.state }}">
 {% if run.state == "finished" %}
               <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m256 76.801c-98.984 0-179.2 80.23-179.2 179.2s80.215 179.2 179.2 179.2c98.988 0 179.2-80.23 179.2-179.2s-80.211-179.2-179.2-179.2zm70.199 138.61-68.277 83.969c-1.3008 1.5938-3.1797 2.6016-5.2227 2.8008-2.043 0.19531-4.0859-0.43359-5.6562-1.7461l-48.152-40.168c-3.2578-2.7188-3.6953-7.5625-0.97656-10.82 2.7148-3.2578 7.5625-3.6953 10.82-0.97656l42.184 35.184 63.371-77.93c2.6797-3.293 7.5156-3.7891 10.805-1.1094 3.2812 2.6719 3.7734 7.5078 1.1055 10.797z" fill="currentColor"/></svg>
-              Finished
-{% elif run.state == "failed" %}
+{% elif run.state in ("failed", "alloc-failed", "setup-failed") %}
               <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m253.44 76.801-194.56 358.4h394.24zm2.5586 296.96c-4.2383 0-7.6797-3.4414-7.6797-7.6797 0-4.2422 3.4414-7.6836 7.6797-7.6836s7.6797 3.4414 7.6797 7.6797c0 4.2422-3.4414 7.6836-7.6797 7.6836zm0-38.402c-4.2383 0-7.6797-3.4414-7.6797-7.6797v-87.039c0-4.2461 3.4414-7.6797 7.6797-7.6797s7.6797 3.4336 7.6797 7.6797v87.039c0 4.2383-3.4414 7.6797-7.6797 7.6797z" fill="currentColor"/></svg>
-              Failed
+{% elif run.state == "canceled" %}
+              <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m256 76.801c-98.984 0-179.2 80.23-179.2 179.2s80.215 179.2 179.2 179.2c98.988 0 179.2-80.23 179.2-179.2s-80.211-179.2-179.2-179.2zm66.359 234.04c3 3 3 7.8633 0 10.859-1.5 1.5-3.4648 2.25-5.4297 2.25-1.9648 0-3.9297-0.75-5.4297-2.25l-55.5-55.5-55.5 55.5c-1.5 1.5-3.4648 2.25-5.4297 2.25-1.9648 0-3.9297-0.75-5.4297-2.25-3-3-3-7.8633 0-10.859l55.5-55.5-55.5-55.5c-3-3-3-7.8633 0-10.859 3-3 7.8633-3 10.859 0l55.5 55.5 55.5-55.5c3-3 7.8633-3 10.859 0 3 3 3 7.8633 0 10.859l-55.5 55.5z" fill="currentColor"/></svg>
 {% else %}
               <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path d="m256 76.801c-98.984 0-179.2 80.23-179.2 179.2s80.215 179.2 179.2 179.2c98.988 0 179.2-80.23 179.2-179.2s-80.211-179.2-179.2-179.2zm87.039 186.88h-87.039c-2.0234 0-4-0.82031-5.4336-2.2461-1.4336-1.4297-2.2461-3.4102-2.2461-5.4336v-112.64c0-4.2383 3.4414-7.6797 7.6797-7.6797s7.6797 3.4414 7.6797 7.6797v104.96h79.359c4.2383 0 7.6797 3.4414 7.6797 7.6797s-3.4375 7.6797-7.6797 7.6797z" fill="currentColor"/></svg>
-              Running
 {% endif %}
+              {{ run.state_label }}
             </span>
           </td>
           <td data-label="Tag" title="{{ run.tag }}">{{ run.tag }}</td>

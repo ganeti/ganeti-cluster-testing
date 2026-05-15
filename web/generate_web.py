@@ -12,7 +12,22 @@ WEB_PATH = "/var/lib/ganeti-qa/"
 STATE_IMAGES = {
     "running": "progress.svg",
     "failed": "alert.svg",
+    "alloc-failed": "alert.svg",
+    "setup-failed": "alert.svg",
+    "canceled": "alert.svg",
     "finished": "ok.svg",
+}
+
+STATE_LABELS = {
+    "running": "Running",
+    "finished": "Finished",
+    "failed": "Failed",
+    "alloc-failed": "Alloc Failed",
+    "setup-failed": "Setup Failed",
+    "canceled": "Canceled",
+    "built": "Built",
+    "removed": "Removed",
+    "timed-out": "Timed Out",
 }
 
 
@@ -41,6 +56,7 @@ def main():
             "started": start_ts.strftime("%Y-%m-%d %H:%M UTC"),
             "started_unix": int(run["started"]),
             "state": run["state"],
+            "state_label": STATE_LABELS.get(run["state"], run["state"]),
             "tag": run.get("tag", "n/a"),
             "state_image": STATE_IMAGES.get(run["state"], "blah"),
             "os_version": run["os-version"],

@@ -9,11 +9,20 @@ import gzip
 import random
 import selectors
 import shutil
+import signal
 import socket
 import subprocess
 import sys
 import tempfile
 import time
+
+
+class RunCanceled(BaseException):
+    pass
+
+
+def _handle_term_signal(signum, frame):
+    raise RunCanceled("received signal %d" % signum)
 
 import client as rapi
 
@@ -671,6 +680,8 @@ def main():
 
     # operational logic
     if args.mode == "run-test":
+        signal.signal(signal.SIGTERM, _handle_term_signal)
+
         tag = "%s-%s" % (get_random_adjective(), get_random_instance_name())
         print("Using tag '%s' for this session" % tag)
 
@@ -695,6 +706,7 @@ def main():
         instances_diff = timedelta(0)
         playbook_diff = timedelta(0)
         qa_diff = timedelta(0)
+        phase = "alloc"
         state = "failed"
         exit_code = 1
 
@@ -736,6 +748,7 @@ def main():
             instances_diff = datetime.datetime.now() - instances_start
             instance_create_runtime = instances_diff.total_seconds()
 
+            phase = "setup"
             store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, 0, 0, instance_create_runtime)
 
             inventory_file = store_inventory(instances)
@@ -747,11 +760,13 @@ def main():
 
             if not playbook_success:
                 print("Ansible playbook failed.")
+                state = "setup-failed"
             elif args.build_only:
                 print("Finished setting up the cluster, but --build-only was given. Exiting now!")
                 state = "built"
                 exit_code = 0
             else:
+                phase = "qa"
                 store_stats(stats_directory, tag, args.recipe, args.os_version, args.source, args.branch, instances, 'running', started_ts, instance_create_runtime, playbook_runtime, 0, instance_create_runtime + playbook_runtime)
 
                 src_file = store_recipe(args.recipe, instances)
@@ -788,9 +803,17 @@ def main():
                     print("Failed to fix permissions on {}: {}".format(stats_directory, e))
         except SystemExit:
             raise
+        except (KeyboardInterrupt, RunCanceled) as e:
+            print("Run canceled in phase '%s': %s: %s" % (phase, type(e).__name__, e))
+            state = "canceled"
         except BaseException as e:
-            print("Run aborted: %s: %s" % (type(e).__name__, e))
-            state = "failed"
+            print("Run aborted in phase '%s': %s: %s" % (phase, type(e).__name__, e))
+            if phase == "alloc":
+                state = "alloc-failed"
+            elif phase == "setup":
+                state = "setup-failed"
+            else:
+                state = "failed"
         finally:
             overall_runtime = instance_create_runtime + playbook_runtime + qa_runtime
             try:
@@ -800,7 +823,7 @@ def main():
 
             should_remove = (
                 (state in ("finished", "built") and args.remove_instances_on_success)
-                or (state == "failed" and args.remove_instances_on_error)
+                or (state in ("failed", "alloc-failed", "setup-failed") and args.remove_instances_on_error)
             )
             if should_remove:
                 print("")
