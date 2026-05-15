@@ -1,9 +1,10 @@
 #!/bin/bash
 # Dracut module for the Ganeti QA guest initramfs.
 #
-# Produces an initramfs that boots, lets udev autoload virtio + PCIe hotplug
-# drivers, starts acpid to handle power-button events, and then blocks forever
-# (the QA instance has no root filesystem to pivot onto).
+# Produces an initramfs that lets udev autoload virtio + PCIe hotplug
+# drivers and starts acpid to handle power-button events. The actual PID 1
+# is our own /sbin/qa-init (selected via init=/sbin/qa-init on the kernel
+# cmdline), not dracut's stock /init — see qa-init.sh for the reasoning.
 
 check() {
 	require_binaries acpid || return 1
@@ -18,19 +19,15 @@ depends() {
 }
 
 install() {
-	inst_multiple acpid sleep
+	inst_multiple acpid sleep mount mkdir udevadm
 
 	inst_simple "$moddir/acpi-power.conf" "/etc/acpi/events/power"
 	inst_simple "$moddir/acpi-handler.sh" "/etc/acpi/handler.sh"
 
-	# These guests are booted without a root= kernel arg, so dracut's normal
-	# pipeline stalls in initqueue waiting for a root device that never
-	# appears. Install the stay-hook in both pre-mount (in case initqueue
-	# settles anyway) and emergency (the path dracut takes once it gives up
-	# looking for root). Whichever fires first wins; the other is a no-op
-	# because the script blocks forever.
-	inst_hook pre-mount 99 "$moddir/ganeti-qa-stay.sh"
-	inst_hook emergency 99 "$moddir/ganeti-qa-stay.sh"
+	# Our replacement PID 1. The QA cluster boots its instances with
+	# init=/sbin/qa-init so dracut's stock pipeline (which would stall in
+	# initqueue waiting for a non-existent root device) is bypassed.
+	inst_simple "$moddir/qa-init.sh" "/sbin/qa-init"
 }
 
 installkernel() {
