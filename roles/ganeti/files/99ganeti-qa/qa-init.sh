@@ -1,13 +1,15 @@
 #!/bin/sh
 # Custom PID 1 for the ganeti QA guest initramfs.
 #
-# These guests boot without a root= kernel argument and have no rootfs to
-# pivot onto. dracut's stock /init expects a real root device, so it stalls
-# silently in initqueue and never reaches its pre-mount or emergency hooks.
-# To avoid that, we boot the kernel with init=/sbin/qa-init and take over
-# directly: mount the basic pseudo-filesystems, bring up udev (so PCIe
-# hotplug works while the QA test runs), and start acpid (so qemu's
-# system_powerdown ACPI event triggers a clean SysRq-poweroff).
+# Ganeti's kvm hypervisor appends root=/dev/vda1 to the kernel cmdline
+# automatically, but the QA instances' virtio disks are unformatted, so
+# /dev/vda1 never appears and dracut's stock /init sits forever in
+# initqueue. To avoid that, we boot the kernel with rdinit=/sbin/qa-init —
+# rdinit= (not init=) is the knob that picks an alternative PID 1 inside
+# the initramfs — and take over directly: mount the basic pseudo-
+# filesystems, bring up udev (so PCIe hotplug still works during the QA
+# test), and start acpid (so qemu's system_powerdown ACPI event triggers
+# a clean SysRq-poweroff).
 #
 # We still rely on dracut to *populate* the initramfs (busybox, udevd, the
 # kernel modules listed in module-setup.sh, acpid). This script just

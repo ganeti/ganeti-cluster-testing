@@ -25,8 +25,9 @@ install() {
 	inst_simple "$moddir/acpi-handler.sh" "/etc/acpi/handler.sh"
 
 	# Our replacement PID 1. The QA cluster boots its instances with
-	# init=/sbin/qa-init so dracut's stock pipeline (which would stall in
-	# initqueue waiting for a non-existent root device) is bypassed.
+	# rdinit=/sbin/qa-init so dracut's stock pipeline (which would stall
+	# in initqueue waiting for the non-existent /dev/vda1 that ganeti
+	# auto-appends as root=) is bypassed.
 	inst_simple "$moddir/qa-init.sh" "/sbin/qa-init"
 }
 
