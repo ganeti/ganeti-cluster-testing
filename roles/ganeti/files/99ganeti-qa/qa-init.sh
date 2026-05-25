@@ -26,6 +26,11 @@ mount -t tmpfs  -o nosuid,nodev,mode=0755        tmpfs  /run
 
 echo "ganeti-qa: qa-init starting" > /dev/kmsg
 
+for mod in acpiphp pciehp shpchp; do
+	modprobe "$mod" 2>/dev/null && \
+		echo "ganeti-qa: loaded $mod" > /dev/kmsg
+done
+
 for udevd in /lib/systemd/systemd-udevd /usr/lib/systemd/systemd-udevd /sbin/udevd; do
 	if [ -x "$udevd" ]; then
 		"$udevd" --daemon

@@ -19,7 +19,7 @@ depends() {
 }
 
 install() {
-	inst_multiple acpid sleep mount mkdir udevadm
+	inst_multiple acpid sleep mount mkdir udevadm modprobe
 
 	inst_simple "$moddir/acpi-power.conf" "/etc/acpi/events/power"
 	inst_simple "$moddir/acpi-handler.sh" "/etc/acpi/handler.sh"
