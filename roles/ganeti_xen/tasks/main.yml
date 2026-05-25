@@ -27,22 +27,17 @@
     regexp: "^XENDOMAINS_SAVE"
     line: "XENDOMAINS_SAVE="
 
-- name: Default-Boot into xen
-  lineinfile:
-    path: /etc/default/grub
-    line: "GRUB_DEFAULT=2"
-
-- name: Configure grub.d/xen.cfg
+- name: Make Xen the default GRUB entry
   lineinfile:
     path: /etc/default/grub.d/xen.cfg
-    regexp: "^#XEN_OVERRIDE_GRUB_DEFAULT"
-    line: "XEN_OVERRIDE_GRUB_DEFAULT=0" 
+    regexp: "^#?XEN_OVERRIDE_GRUB_DEFAULT="
+    line: "XEN_OVERRIDE_GRUB_DEFAULT=1"
 
-- name: Configure grub.d/xen.cfg
+- name: Set Xen hypervisor command line (dom0 memory)
   lineinfile:
     path: /etc/default/grub.d/xen.cfg
-    regexp: "^#GRUB_CMDLINE_XEN_DEFAULT"
-    line: 'GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=1G,max:1G"' 
+    regexp: "^#?GRUB_CMDLINE_XEN_DEFAULT="
+    line: 'GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=1G,max:1G"'
 
 - name: Reload grub settings
   command: update-grub
