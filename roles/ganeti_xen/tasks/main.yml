@@ -27,19 +27,28 @@
     regexp: "^XENDOMAINS_SAVE"
     line: "XENDOMAINS_SAVE="
 
-- name: Make Xen the default GRUB entry
-  lineinfile:
-    path: /etc/default/grub.d/xen.cfg
-    regexp: "^#?XEN_OVERRIDE_GRUB_DEFAULT="
-    line: "XEN_OVERRIDE_GRUB_DEFAULT=1"
-
 - name: Set Xen hypervisor command line (dom0 memory)
   lineinfile:
     path: /etc/default/grub.d/xen.cfg
     regexp: "^#?GRUB_CMDLINE_XEN_DEFAULT="
     line: 'GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=1G,max:1G"'
 
-- name: Reload grub settings
+- name: Generate grub.cfg so the Xen menuentry exists for lookup
+  command: update-grub
+
+- name: Find the title of the top-level Xen menuentry
+  shell: awk -F"'" '/^menuentry .*Xen hypervisor/ {print $2; exit}' /boot/grub/grub.cfg
+  register: xen_menuentry_title
+  changed_when: false
+  failed_when: xen_menuentry_title.stdout == ""
+
+- name: Pin Xen menuentry as GRUB default (by title, stable across kernel updates)
+  lineinfile:
+    path: /etc/default/grub
+    regexp: "^GRUB_DEFAULT="
+    line: 'GRUB_DEFAULT="{{ xen_menuentry_title.stdout }}"'
+
+- name: Regenerate grub.cfg with Xen as the default
   command: update-grub
 
 - name: Reboot and wait for hosts to activate Xen environment
