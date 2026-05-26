@@ -33,22 +33,22 @@
     regexp: "^#?GRUB_CMDLINE_XEN_DEFAULT="
     line: 'GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=1G,max:1G"'
 
-- name: Generate grub.cfg so the Xen menuentry exists for lookup
-  command: update-grub
+# Throwaway QA VMs only ever need to boot as Xen dom0. Suppressing the
+# non-Xen entry generator leaves the Xen multiboot menuentries as the
+# only choice in grub.cfg, so GRUB_DEFAULT=0 picks them unconditionally —
+# no fragile title/index/ID matching against grub-mkconfig output.
+- name: Suppress non-Xen GRUB entries (10_linux)
+  file:
+    path: /etc/grub.d/10_linux
+    mode: a-x
 
-- name: Find the title of the top-level Xen menuentry
-  shell: awk -F"'" '/^menuentry .*Xen hypervisor/ {print $2; exit}' /boot/grub/grub.cfg
-  register: xen_menuentry_title
-  changed_when: false
-  failed_when: xen_menuentry_title.stdout == ""
-
-- name: Pin Xen menuentry as GRUB default (by title, stable across kernel updates)
+- name: Make Xen the default GRUB entry (it is now the only one)
   lineinfile:
     path: /etc/default/grub
     regexp: "^GRUB_DEFAULT="
-    line: 'GRUB_DEFAULT="{{ xen_menuentry_title.stdout }}"'
+    line: "GRUB_DEFAULT=0"
 
-- name: Regenerate grub.cfg with Xen as the default
+- name: Regenerate grub.cfg with only Xen entries
   command: update-grub
 
 - name: Reboot and wait for hosts to activate Xen environment
@@ -59,3 +59,9 @@
     pre_reboot_delay: 0
     post_reboot_delay: 30
     test_command: whoami
+
+- name: Assert that Xen dom0 is actually running after the reboot
+  command: cat /sys/hypervisor/type
+  register: hypervisor_type
+  changed_when: false
+  failed_when: hypervisor_type.stdout != "xen"
