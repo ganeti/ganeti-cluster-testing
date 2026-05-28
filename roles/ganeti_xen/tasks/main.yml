@@ -76,6 +76,6 @@
   command: xl info
   register: xl_info
   retries: 30
-  delay: 2
+  delay: 5
   until: xl_info.rc == 0
   changed_when: false
