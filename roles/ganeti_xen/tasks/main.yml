@@ -65,3 +65,17 @@
   register: hypervisor_type
   changed_when: false
   failed_when: hypervisor_type.stdout != "xen"
+
+# /sys/hypervisor/type goes "xen" the moment the dom0 kernel boots, but
+# the toolstack (xenfs on /proc/xen, xenstored, /dev/xen/privcmd, ...)
+# only comes up later when xen.service runs. If we proceed to cluster
+# init before that, ganeti-noded's `xl info` calls fail with
+# "Could not obtain handle on privileged command interface" and
+# `gnt-cluster verify` reports the xl toolstack as missing.
+- name: Wait for Xen toolstack to become usable
+  command: xl info
+  register: xl_info
+  retries: 30
+  delay: 2
+  until: xl_info.rc == 0
+  changed_when: false
