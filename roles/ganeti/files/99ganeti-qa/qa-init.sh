@@ -7,13 +7,14 @@
 # initqueue. To avoid that, we boot the kernel with rdinit=/sbin/qa-init —
 # rdinit= (not init=) is the knob that picks an alternative PID 1 inside
 # the initramfs — and take over directly: mount the basic pseudo-
-# filesystems, bring up udev (so PCIe hotplug still works during the QA
-# test), and start acpid (so qemu's system_powerdown ACPI event triggers
-# a clean SysRq-poweroff).
+# filesystems and start acpid (so qemu's system_powerdown ACPI event
+# triggers a clean SysRq-poweroff).
 #
-# We still rely on dracut to *populate* the initramfs (busybox, udevd, the
-# kernel modules listed in module-setup.sh, acpid). This script just
-# orchestrates them, replacing dracut's init pipeline entirely.
+# Note: we deliberately do NOT start udev. The Ganeti QA hotplug test
+# only checks QEMU-side state and never uses hot-added devices from
+# inside the guest; leaving them with no class driver bound is what
+# lets ACPI hot-unplug on pc-i440fx-* finish within ganeti's
+# verification budget (see module-setup.sh installkernel()).
 
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -26,23 +27,13 @@ mount -t tmpfs  -o nosuid,nodev,mode=0755        tmpfs  /run
 
 echo "ganeti-qa: qa-init starting" > /dev/kmsg
 
-for mod in acpiphp pciehp shpchp; do
-	modprobe "$mod" 2>/dev/null && \
-		echo "ganeti-qa: loaded $mod" > /dev/kmsg
-done
-
-for udevd in /lib/systemd/systemd-udevd /usr/lib/systemd/systemd-udevd /sbin/udevd; do
-	if [ -x "$udevd" ]; then
-		"$udevd" --daemon
-		break
-	fi
-done
-
-udevadm trigger --type=subsystems --action=add
-udevadm trigger --type=devices --action=add
-udevadm settle --timeout=30
-
-echo "ganeti-qa: udev settled, starting acpid" > /dev/kmsg
+# Load drivers for the devices Ganeti wires up at instance start. We
+# explicitly modprobe these (instead of letting udev autoload via
+# modalias) because we deliberately do not run udev — see the rationale
+# in module-setup.sh installkernel().
+modprobe virtio_pci
+modprobe virtio_balloon
+modprobe virtio_console
 
 acpid -f -l /dev/null </dev/null >/dev/null 2>&1 &
 echo "ganeti-qa: acpid pid=$!" > /dev/kmsg
