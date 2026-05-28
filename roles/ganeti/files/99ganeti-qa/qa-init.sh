@@ -7,8 +7,10 @@
 # initqueue. To avoid that, we boot the kernel with rdinit=/sbin/qa-init —
 # rdinit= (not init=) is the knob that picks an alternative PID 1 inside
 # the initramfs — and take over directly: mount the basic pseudo-
-# filesystems and start acpid (so qemu's system_powerdown ACPI event
-# triggers a clean SysRq-poweroff).
+# filesystems, start acpid (so qemu's system_powerdown ACPI event triggers
+# a clean SysRq-poweroff under KVM), and trap SIGINT (so Xen PV reboot
+# requests, which the kernel delivers as ctrl_alt_del → SIGINT to PID 1,
+# also trigger a clean reboot).
 #
 # Note: we deliberately do NOT start udev. The Ganeti QA hotplug test
 # only checks QEMU-side state and never uses hot-added devices from
@@ -38,7 +40,15 @@ modprobe virtio_console
 acpid -f -l /dev/null </dev/null >/dev/null 2>&1 &
 echo "ganeti-qa: acpid pid=$!" > /dev/kmsg
 
+# Xen PV shutdown path: the kernel watches xenstore control/shutdown itself
+# (drivers/xen/manage.c). For "poweroff"/"halt" it runs /sbin/poweroff via
+# the usermode-helper — that just needs the binary present, handled by
+# module-setup. For "reboot" it calls ctrl_alt_del() which sends SIGINT to
+# PID 1; trap it and reboot. (KVM uses the acpid path above instead.)
+trap 'exec reboot -f' INT
+
 # PID 1 must never exit (kernel panics otherwise).
 while :; do
-	sleep 86400
+	sleep 86400 &
+	wait $!
 done
