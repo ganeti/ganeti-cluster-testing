@@ -44,7 +44,10 @@ def main():
             run_path = os.path.join(run_dir, "run.json")
             if os.path.exists(run_path):
                 with open(run_path) as f:
-                    ganeti_runs.append(json.load(f))
+                    try:
+                        ganeti_runs.append(json.load(f))
+                    except json.decoder.JSONDecodeError:
+                        continue
                     ganeti_runs[-1]["id"] = run_id
 
     ganeti_runs.sort(reverse=True, key=lambda x: x["started"])
