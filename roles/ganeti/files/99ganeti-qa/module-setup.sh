@@ -22,11 +22,7 @@ depends() {
 }
 
 install() {
-	# reboot+poweroff are the Xen PV shutdown path: kernel delivers
-	# control/shutdown=reboot as SIGINT to PID 1 (we trap and exec
-	# reboot), and control/shutdown=poweroff|halt as a usermode-helper
-	# invocation of /sbin/poweroff. See qa-init.sh.
-	inst_multiple acpid sleep mount mkdir modprobe reboot poweroff
+	inst_multiple acpid sleep mount mkdir modprobe
 
 	inst_simple "$moddir/acpi-power.conf" "/etc/acpi/events/power"
 	inst_simple "$moddir/acpi-handler.sh" "/etc/acpi/handler.sh"
