@@ -15,12 +15,16 @@
 - name: Export shared-file-storage folder
   lineinfile:
     path: /etc/exports
-    line: "/srv/ganeti/shared-file-storage  192.168.1.0/24(rw,no_root_squash)"
+    regexp: "^/srv/ganeti/shared-file-storage\\s"
+    line: "/srv/ganeti/shared-file-storage  192.168.1.0/24(rw,sync,no_wdelay,no_subtree_check,no_root_squash)"
 
 - name: Restart NFS server
   service:
     name: nfs-kernel-server
     enabled: yes
     state: restarted
+
+- name: Reload NFS exports
+  command: exportfs -ra
 
 

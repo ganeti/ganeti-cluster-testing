@@ -16,4 +16,5 @@
     path: /srv/ganeti/shared-file-storage
     src: "{{ groups['master_node'][0] }}:/srv/ganeti/shared-file-storage"
     fstype: nfs
+    opts: "rw,hard,actimeo=0,lookupcache=none"
     state: mounted
