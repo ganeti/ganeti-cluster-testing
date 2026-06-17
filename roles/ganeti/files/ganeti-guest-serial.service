@@ -1,0 +1,12 @@
+[Unit]
+Description=Archive Ganeti QA guest serial consoles to /var/log/ganeti/guest-serial
+After=network.target ganeti.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/archive-guest-serial.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

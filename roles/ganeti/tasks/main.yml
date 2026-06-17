@@ -109,3 +109,31 @@
     mode: "0644"
     content: "*/5 * * * * root if [ -f /var/log/ganeti/qa-output.log ]; then echo > /var/log/ganeti/qa-output.log; fi\n"
 
+- name: Install socat for capturing guest serial consoles
+  apt:
+    name: socat
+    state: present
+
+- name: Install guest serial console collector script
+  copy:
+    src: archive-guest-serial.sh
+    dest: /usr/local/sbin/archive-guest-serial.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install guest serial console collector service
+  copy:
+    src: ganeti-guest-serial.service
+    dest: /etc/systemd/system/ganeti-guest-serial.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and (re)start guest serial console collector
+  systemd:
+    name: ganeti-guest-serial.service
+    enabled: true
+    state: restarted
+    daemon_reload: true
+
