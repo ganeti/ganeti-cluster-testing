@@ -4,7 +4,9 @@
 # "server,nowait" UNIX socket at <ctrl-dir>/<instance>.serial (only when
 # the instance is started with serial_console=true). We attach a socat
 # client to each socket - exactly like `gnt-instance console` does - and
-# append everything the guest writes to /var/log/ganeti/guest-serial/.
+# append everything the guest writes to
+# /var/log/ganeti/guest-serial/<UTC-timestamp>-<instance>.log (one file
+# per instance lifetime; see the spawn loop below for the naming).
 #
 # run-cluster-test.py scp's the whole /var/log/ganeti tree from every node
 # into the QA run archive, so these logs become browsable per run without
@@ -42,8 +44,14 @@ while :; do
       continue
     fi
     name=$(basename "$sock" .serial)
+    # A newly appeared socket means a freshly (re)started qemu for this
+    # instance. The QA suite reuses the same handful of instance names
+    # many times per run, so stamp the logfile with the current UTC time
+    # to keep each instance lifetime in its own file instead of appending
+    # them all into one <instance>.log.
+    ts=$(date -u +%Y%m%d-%H%M%S)
     socat -u "UNIX-CONNECT:$sock" \
-      "OPEN:$LOG_DIR/$name.log,creat,append" >/dev/null 2>&1 &
+      "OPEN:$LOG_DIR/$ts-$name.log,creat,append" >/dev/null 2>&1 &
     PIDS["$sock"]=$!
   done
 
