@@ -79,3 +79,16 @@
   delay: 5
   until: xl_info.rc == 0
   changed_when: false
+
+- name: find path to hvmloader binary
+  find:
+    file_type: file
+    paths:
+      - /usr/lib
+    recurse: true
+    patterns: "hvmloader"
+  register: find_hvmloader
+
+- set_fact:
+    hvmloader_path: "{{ find_hvmloader.files[0].path }}"
+
