@@ -27,6 +27,7 @@
       - pandoc
       - qemu-kvm
       - qemu-utils
+      - qemu-block-extra
       - socat
       - ssh
 

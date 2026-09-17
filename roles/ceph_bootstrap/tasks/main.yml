@@ -12,9 +12,15 @@
     state: present
 
 - name: Download cephadm
-  get_url:
-    url: https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm
-    dest: /usr/local/bin/cephadm
+  command: >
+    curl -fsSL https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm
+    -o /usr/local/bin/cephadm
+  args:
+    creates: /usr/local/bin/cephadm
+
+- name: Set cephadm executable
+  file:
+    path: /usr/local/bin/cephadm
     mode: "0755"
 
 - name: Initiate ceph
