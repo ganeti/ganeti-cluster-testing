@@ -107,7 +107,7 @@
     "cluster-copyfile": true,
     "cluster-master-failover": false,
     "# this does not work, possibly because it generates dsa keys": null,
-    "cluster-renew-crypto": false,
+    "cluster-renew-crypto": true,
     "cluster-destroy": true,
     "cluster-rename": false,
     "cluster-reserved-lvs": true,
