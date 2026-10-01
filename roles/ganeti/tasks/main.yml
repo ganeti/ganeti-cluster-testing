@@ -3,6 +3,7 @@
   apt:
     name:
       - ganeti-os-noop
+      - ovmf
 
 - name: Install required packages for Debian trixie
   apt:

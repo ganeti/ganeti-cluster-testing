@@ -18,6 +18,8 @@
     "kvm"
   ],
 
+  "kvm-boot-types": ["direct_kernel", "direct_kernel_efi"],
+
   "enabled-disk-templates": [
     "plain",
     "drbd",
@@ -155,6 +157,7 @@
     "# This test needs at least two nodes": null,
     "node-failover": true,
 
+    "instance-boot-types": true,
     "instance-add-plain-disk": true,
     "instance-add-file": true,
     "instance-add-shared-file": true,
